@@ -1,0 +1,13 @@
+{
+    "message": "The given data was invalid.",
+    "errors": {
+        "avatar": [
+            {
+                "min_width": "The avatar width cannot be less than 100px",
+                "min_height": "The avatar height cannot be less than 100px",
+                "max_width": "The avatar width cannot be greater than 600px",
+                "max_height": "The avatar height cannot be greater than 600px"
+            }
+        ]
+    }
+}

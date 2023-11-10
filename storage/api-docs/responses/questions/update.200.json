@@ -1,0 +1,12 @@
+{
+    "success": true,
+    "data": {
+        "id": 43,
+        "quiz_id": 1,
+        "question": "Kategoria",
+        "correct_answer_id": null,
+        "created_at": "2022-03-06T17:23:30.000000Z",
+        "updated_at": "2022-03-06T17:25:10.000000Z"
+    },
+    "message": "Object updated."
+}

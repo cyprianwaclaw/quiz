@@ -1,0 +1,18 @@
+{
+    "id": 1,
+    "subscriber_type": "App\\Models\\User",
+    "subscriber_id": 1,
+    "plan_id": 1,
+    "slug": "main",
+    "name": "main",
+    "description": null,
+    "trial_ends_at": "2022-04-09T17:01:54.000000Z",
+    "starts_at": "2022-04-09T17:01:54.000000Z",
+    "ends_at": "2121-04-09T17:01:54.000000Z",
+    "cancels_at": null,
+    "canceled_at": null,
+    "timezone": null,
+    "created_at": "2022-04-09T17:01:54.000000Z",
+    "updated_at": "2022-04-09T17:01:54.000000Z",
+    "deleted_at": null
+}

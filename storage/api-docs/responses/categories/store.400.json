@@ -1,0 +1,8 @@
+{
+    "success": false,
+    "message": {
+        "field": [
+            "The name must be at least 3 characters."
+        ]
+    }
+}

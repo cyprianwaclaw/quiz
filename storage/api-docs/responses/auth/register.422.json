@@ -1,0 +1,11 @@
+{
+    "message": "The given data was invalid.",
+    "errors": {
+        "field1": [
+            "error message"
+        ],
+        "field2": [
+            "error message"
+        ]
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "success": true,
+    "data": {
+        "question": "Kategoria",
+        "quiz_id": 1,
+        "updated_at": "2022-03-06T17:23:30.000000Z",
+        "created_at": "2022-03-06T17:23:30.000000Z",
+        "id": 43
+    },
+    "message": "Object created."
+}

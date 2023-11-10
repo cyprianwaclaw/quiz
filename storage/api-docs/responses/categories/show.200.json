@@ -1,0 +1,10 @@
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "name": "Jedzenie",
+        "created_at": "2022-03-05T16:50:14.000000Z",
+        "updated_at": "2022-03-05T16:50:14.000000Z"
+    },
+    "message": "Object fetched."
+}

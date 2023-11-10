@@ -1,0 +1,28 @@
+{
+    "success": true,
+    "data": {
+        "personal": {
+            "name": "zxc",
+            "surname": null,
+            "email": "test@example.com",
+            "phone": "111 225 111"
+        },
+        "company": {
+            "name": "TEST2",
+            "nip": "8213622586",
+            "regon": "236170890",
+            "address": {
+                "city": "asdasd2",
+                "postcode": "22-222",
+                "street": "asdasdcxz",
+                "building_number": "55",
+                "house_number": "12"
+            }
+        },
+        "financial": {
+            "bank_name": "BANK MILLENIUM SA",
+            "iban": "PL65802510332533324434431256",
+            "swift": "BIGBPLPW"
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "user": {
+        "id": 1,
+        "name": "test",
+        "email": "test@example.com",
+        "email_verified_at": "2022-03-05T16:50:14.000000Z",
+        "invited_by": null,
+        "points": 0,
+        "created_at": null,
+        "updated_at": null
+    },
+    "access_token": "6|MBZpSBOTcdGUahuauv1nK2MrerF2xYfabqTLpfAm"
+}

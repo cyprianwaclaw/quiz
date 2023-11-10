@@ -1,0 +1,11 @@
+{
+    "success": true,
+    "data": [
+        {
+            "id": 4,
+            "name": "Jannnn",
+            "is_premium": true,
+            "avatar_path": null
+        }
+    ]
+}

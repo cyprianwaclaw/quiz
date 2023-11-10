@@ -1,0 +1,16 @@
+{
+    "success": true,
+    "data": {
+        "id": 11,
+        "category_id": 1,
+        "title": "Tytuł quizu",
+        "description": "Opis quizu",
+        "image": "http://quiz.test/storage/quiz_images/xcOiXyVEdu3FBPm2pEv4rdRCQ5hYBcVrzvnWVgKc.png",
+        "time": 3,
+        "difficulty": "hard",
+        "is_active": 0,
+        "created_at": "2022-05-07T18:53:23.000000Z",
+        "updated_at": "2022-05-07T18:54:16.000000Z"
+    },
+    "message": "Object updated."
+}

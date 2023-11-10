@@ -1,0 +1,12 @@
+{
+    "message": "Registartion successfully",
+    "user": {
+        "name": "test4",
+        "email": "tes5125@example.com",
+        "invited_by": 1,
+        "updated_at": "2022-03-05T17:02:59.000000Z",
+        "created_at": "2022-03-05T17:02:59.000000Z",
+        "id": 8
+    },
+    "access_token": "5|HSdLJgrRJl0eW5nLXf6Tovi3LtzAMDO2ca4jAE7H"
+}
