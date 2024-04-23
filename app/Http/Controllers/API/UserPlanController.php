@@ -39,21 +39,19 @@ class UserPlanController extends APIController
     {
         $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
         $plan = Plan::findOrFail($request->input('plan'));
-        if($plan->price > 0) {
+        if ($plan->price > 0) {
             $planSubscription = auth()->user()->newPlanSubscription('main', $plan);
             $planSubscription->ends_at = now();
             $planSubscription->save();
 
             return $this->paymentTransaction($planSubscription, $plan);
-        }
-        else{
+        } else {
             return $this->sendError('Ten plan jest niedostępny');
         }
     }
 
     public function setUserPlan($user, $plan)
     {
-
     }
 
     /**
@@ -69,11 +67,14 @@ class UserPlanController extends APIController
      */
     public function userHasPremium(Request $request)
     {
-        if(!$request->input('user_id'))
+        if (!$request->input('user_id'))
             $user = auth()->user();
         else
             $user = User::findOrFail($request->input('user_id'));
-        return json_encode((bool)$user->hasPremium());
+        return json_encode([
+            'has_premium' => (bool)$user->hasPremium(),
+            'premium_end' => $user->activePlanSubscriptions()->pluck('ends_at')->first()
+        ]);
     }
 
     /**
@@ -90,7 +91,7 @@ class UserPlanController extends APIController
      */
     public function getUserPlan(Request $request)
     {
-        if(!$request->input('user_id'))
+        if (!$request->input('user_id'))
             $user = auth()->user();
         else
             $user = User::findOrFail($request->input('user_id'));
@@ -106,8 +107,7 @@ class UserPlanController extends APIController
                 ->setEmail(\Auth::user()->email)
                 ->setAmount($planSubscription->plan->price)
                 ->init();
-            if($response->isSuccess())
-            {
+            if ($response->isSuccess()) {
                 $payment->status = PaymentStatus::IN_PROGRESS;
                 $payment->session_id = $response->getSessionId();
                 $payment->save();
@@ -118,11 +118,11 @@ class UserPlanController extends APIController
                 $payment->error_code = $response->getErrorCode();
                 $payment->error_description = json_encode($response->getErrorDescription());
                 $payment->save();
-                return $this->sendError( 'Błąd');
+                return $this->sendError('Błąd');
             }
-        } catch (RequestException|RequestExecutionException $e) {
+        } catch (RequestException | RequestExecutionException $e) {
             \Log::error('Błąd transakcji', ['error' => $e]);
-            return $this->sendError( 'Błąd transakcji');
+            return $this->sendError('Błąd transakcji');
         }
     }
 
@@ -132,16 +132,14 @@ class UserPlanController extends APIController
         $user = User::findOrFail($request->input('user_id'));
 
         $plan = Plan::findOrFail(2);
-        if($plan->price > 0) {
+        if ($plan->price > 0) {
             $planSubscription = $user->newPlanSubscription('main', $plan);
             $planSubscription->ends_at = Carbon::now()->addDays($days);
             $planSubscription->save();
 
             return $this->sendResponse('Premium ważne do: ' . Carbon::now()->addDays($days));
-        }
-        else{
+        } else {
             return $this->sendError('Ten plan jest niedostępny');
         }
     }
-
 }

@@ -20,7 +20,7 @@ abstract class IFirmaApi {
     const REQUEST_TYPE_PUT = 3;
 
     const RESPONSE_TYPE_JSON = 'json';
-    const RESPONSE_TYPE_PDF = 'pdf';
+    const RESPONSE_TYPE_PDF = 'arraybuffer';
     const RESPONSE_TYPE_XML = 'xml';
 
     protected function __construct($login, $key) {

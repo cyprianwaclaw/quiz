@@ -158,7 +158,8 @@ class UserSettingsController extends APIController
      * @responseFile status=200 scenario="Avatar updated" storage/api-docs/responses/users/uploadAvatar.200.json
      * @responseFile status=422 scenario="Avatar no updated" storage/api-docs/responses/users/uploadAvatar.422.json
      */
-    public function uploadUserPhoto(UploadUserAvatarRequest $request){
+    public function uploadUserPhoto(UploadUserAvatarRequest $request)
+    {
         /** @var User $user */
         $user = auth()->user();
         // check if image has been received from form
@@ -169,7 +170,7 @@ class UserSettingsController extends APIController
             // delete existing image file
             Storage::disk('user_avatars')->delete($user->avatar_path);
         }
-        // processing the uploaded image
+       x // processing the uploaded image
         $avatar_path = $validated['avatar']->store('','user_avatars');
 
         // Update user's avatar column on 'users' table

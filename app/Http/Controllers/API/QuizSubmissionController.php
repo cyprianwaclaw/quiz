@@ -81,17 +81,45 @@ class QuizSubmissionController extends APIController
         if ($user->cannot('update', [$submissionAnswer, $answer])) {
             return $this->sendError( 'Unauthorized','You cannot do this',401);
         }
-        if($submissionAnswer->answer()->associate($answer)->save()){
-            event(new AnsweredQuestion($user, $answer->correct));
+        // if($submissionAnswer->answer()->associate($answer)->save()){
+        //     event(new AnsweredQuestion($user, $answer->correct));
+        //     $response = [
+        //         'submission_id' => $quizSubmission->id,
+        //         'is_correct' => $answer->correct,
+        //         'next_question' => $this->getNextQuestion($quizSubmission),
+        //     ];
+        //     if (is_null($response['next_question'])) {
+        //         $quizDuration = gmdate('i:s', $quizSubmission->created_at->diffInSeconds($quizSubmission->ended_at));
+        //         $response['quiz_time'] = $quizDuration;
+        //     }
+        if ($submissionAnswer->answer()->associate($answer)->save()) {
+            $isCorrect = $answer->correct;
+
+            // Update user stats
+            $user = User::find(auth()->id());
+            $userStats = $user->stats;
+
+            if ($isCorrect) {
+                $userStats->increment('correct_answers');
+            } else {
+                $userStats->increment('incorrect_answers');
+            }
+
+            $userStats->save();
+
+            event(new AnsweredQuestion($user, $isCorrect));
+
             $response = [
                 'submission_id' => $quizSubmission->id,
-                'is_correct' => $answer->correct,
+                'is_correct' => $isCorrect,
                 'next_question' => $this->getNextQuestion($quizSubmission),
             ];
+
             if (is_null($response['next_question'])) {
                 $quizDuration = gmdate('i:s', $quizSubmission->created_at->diffInSeconds($quizSubmission->ended_at));
                 $response['quiz_time'] = $quizDuration;
             }
+
             return $this->sendResponse($response);
         }
     }

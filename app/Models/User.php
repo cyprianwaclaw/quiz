@@ -146,6 +146,25 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(UserStats::class);
     }
 
+ // testowanie domslnie przypisanie statystyk
+    protected static function booted()
+    {
+        // parent::boote();
+
+        static::created(function ($user) {
+            $user->createUserStats();
+        });
+    }
+
+    public function createUserStats()
+    {
+        UserStats::create([
+            'user_id' => $this->id,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+        ]);
+    }
+
     public function addPoints($value)
     {
         $this->points += $value;

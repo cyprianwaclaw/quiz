@@ -29,4 +29,10 @@ use Illuminate\Database\Eloquent\Model;
 class UserStats extends Model
 {
     use HasFactory;
+    
+    protected $fillable = [
+        'correct_answers',
+        'incorrect_answers',
+        'user_id', // Dodajemy user_id do fillable
+    ];
 }

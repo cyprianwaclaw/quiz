@@ -57,6 +57,7 @@ class Quiz extends Model
         'user_id',
     ];
 
+    // dodawanie liczby pytan do kazdego po relacji questions_count
     protected $appends = ['questions_count'];
 
     public function getQuestionsCountAttribute()
@@ -118,14 +119,14 @@ class Quiz extends Model
         $query->where('category_id', $category_id);
     }
 
-   /* public function scopeFilter(Builder $builder, $request): Builder
+    /* public function scopeFilter(Builder $builder, $request): Builder
     {
         return (new QuizFilter($request))->filter($builder);
     }*/
 
     public function scopePopular(Builder $builder)
     {
-       /* $builder->select()->orderByDesc('total')
+        /* $builder->select()->orderByDesc('total')
             ->selectSub(
                 QuizSubmission::selectRaw('count(*)')
                     ->whereNotNull('ended_at')
@@ -139,11 +140,12 @@ class Quiz extends Model
                     ->selectRaw('count(*) as total')
                     ->whereNotNull('ended_at')
                     ->groupBy('quiz_id'),
-                'total', function ($join) {
-                $join->on('quizzes.id', '=', 'total.quiz_id');
-            })
+                'total',
+                function ($join) {
+                    $join->on('quizzes.id', '=', 'total.quiz_id');
+                }
+            )
             ->orderByDesc('total');
-
     }
 
     public function scopeLatest(Builder $builder)

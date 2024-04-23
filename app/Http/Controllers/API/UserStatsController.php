@@ -28,4 +28,22 @@ class UserStatsController extends APIController
             'incorrect_answers' => $stats->incorrect_answers,
         ]);
     }
+    // /**
+    //  * Update user stats after quiz completion
+    //  *
+    //  * @param bool $isCorrect Whether the last answer was correct
+    //  */
+    // private function updateStats(bool $isCorrect)
+    // {
+    //     $user = auth()->user();
+    //     $userStats = $user->stats;
+
+    //     if ($isCorrect) {
+    //         $userStats->increment('correct_answers');
+    //     } else {
+    //         $userStats->increment('incorrect_answers');
+    //     }
+
+    //     $userStats->save();
+    // }
 }

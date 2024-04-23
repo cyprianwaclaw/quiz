@@ -34,14 +34,18 @@ Route::post('login', [AuthController::class, 'login']);
 Route::group(['middleware' => ['auth:sanctum','role:admin']], function () {
     Route::post('user/givePremium', [UserPlanController::class, 'givePremium']);
 });
+
 Route::middleware(['auth:sanctum', 'verified'])->group(function(){
     Route::prefix('quizzes')->group(function (){
         Route::get('fast-two',[QuizController::class, 'fastTwo']);
+
         Route::get('popular',[QuizController::class, 'popular']);
         Route::get('latest',[QuizController::class, 'latest']);
         Route::get('for-you', [QuizController::class, 'forYou']);
+        // nowy endpoint do sortowania
         Route::get('all', [QuizController::class, 'getAll']);
     });
+
     Route::apiResource('quizzes', QuizController::class,["as" => "api"]);
     Route::get('quizzes/{id}/questions', [QuizController::class, 'getQuestions']);
     Route::apiResource('categories', CategoryController::class,["as" => "api"]);
@@ -55,7 +59,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function(){
     Route::apiResource('answers', AnswerController::class,["as" => "api"]);
     Route::get('answers/{id}/question', [AnswerController::class, 'getQuestion']);
 
-    Route::get('users/current', [AuthController::class, 'getCurrentUser']);
+    Route::get('user/current', [AuthController::class, 'getCurrentUser']);
     Route::get('user/getInvitationToken', [AuthController::class, 'getInvitationToken']);
     Route::post('user/uploadAvatar', [UserSettingsController::class, 'uploadUserPhoto']);
     Route::get('user/quizzes', [UserController::class, 'getUserQuizzes']);

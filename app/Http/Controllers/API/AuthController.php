@@ -5,15 +5,35 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\API\UserResource;
 use App\Models\Invite;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Mail\test;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use const Grpc\STATUS_PERMISSION_DENIED;
+use Illuminate\Support\Str;
+use App\Models\UserStats;
 
 class AuthController extends APIController
 {
+    public function verifyUserEmail($id)
+    {
+        // $request->validate([
+        //  'user_id' => 'required|exists:users,id',
+        // ]);
+
+        $user = User::find($id);
+
+        // Przyjmij, że przyjmuje bieżącą datę i godzinę jako email_verified_atžž
+        $user->email_verified_at = now();
+        $user->save();
+
+        return response(['user' => $user]);
+    }
+
     /**
      * Registration
      * @unauthenticated
@@ -35,29 +55,37 @@ class AuthController extends APIController
             // Example: test123456
             'password_confirmation' => 'required|same:password',
             // Example: y12rOwSuEDxuI3691N1v
-            'invitation' => 'size:20'
+            'invitation' => 'exists:App\Models\Invite,token'
         ]);
 
         if ($request->invitation) {
             $invite = Invite::where('token', $request->invitation)->first();
-            if($invite) {
+            if ($invite) {
                 $validatedData['invited_by'] = $invite->user->id;
-//                dd($invite->user->id);  // user id zgadza sie
-//                return response('jakis jest');
-            }else{
-                return response(['message'=>'Invitation token not found'],Response::HTTP_NOT_FOUND);
+                //                dd($invite->user->id);  // user id zgadza sie
+                //                return response('jakis jest');
+            } else {
+                return response(['message' => 'Invitation token not found'], Response::HTTP_NOT_FOUND);
             }
-        }elseif(User::count() >= config('auth.max_register_users')){
-//            return response(['message'=>'Możesz się zarejestrować tylko przez link zapraszający'], Response::HTTP_FORBIDDEN);
-            return response(['message'=>'Registration by invitation only'], Response::HTTP_FORBIDDEN);
+        } elseif (User::count() >= config('auth.max_register_users')) {
+            //            return response(['message'=>'Możesz się zarejestrować tylko przez link zapraszający'], Response::HTTP_FORBIDDEN);
+            return response(['message' => 'Registration by invitation only'], Response::HTTP_FORBIDDEN);
         }
-//        return response(['message' => 'Registartion successfully'], Response::HTTP_CREATED);
+        //        return response(['message' => 'Registartion successfully'], Response::HTTP_CREATED);
         $validatedData['password'] = Hash::make($request->password);
         $user = User::create($validatedData);
 
-        $accessToken = $user->createToken('authToken')->plainTextToken;
+        // Mail::to($user->email)->send(new test($user));
+        $token = Str::random(20);
+        Invite::create([
+            'user_id' => $user->id, // Przypisz ID nowo-zarejestrowanego użytkownika
+            'token' => $token,
+        ]);
 
-        return response(['message'=> 'Registartion successfully', 'user' => $user, 'access_token' => $accessToken], Response::HTTP_CREATED);
+        // event(new Registered($user));
+        $accessToken = $user->createToken('authToken')->plainTextToken;
+        Auth::login($user);
+        return response(['message' => 'Registartion successfully', 'user' => $user, 'access_token' => $accessToken, 'invitation_token' => $invite->token,], Response::HTTP_CREATED);
     }
 
     /**
@@ -72,9 +100,7 @@ class AuthController extends APIController
     public function login(Request $request)
     {
         $loginData = $request->validate([
-            // Example: test@example.com
             'email' => 'email|required',
-            // Example: test123456
             'password' => 'required|min:8'
         ]);
         if (!Auth::attempt($loginData)) {
@@ -99,10 +125,26 @@ class AuthController extends APIController
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|Response
      *
      */
+
     public function getCurrentUser(Request $request)
     {
-      $user=$request->user('api');
-      return response(['user' => UserResource::make(auth()->user())]);
+        $user = User::findOrFail(auth()->user()->id);
+        $stats = $user->stats;
+        $invited = User::where('invited_by', $user->id)->count();
+        return response([
+            'user_name' => $user->name,
+            'user_surname' => $user->surname,
+            'answers' => [
+                'correct' => $stats->correct_answers,
+                'incorrect' => $stats->incorrect_answers,
+                'all' => $stats->correct_answers + $stats->incorrect_answers,
+            ],
+            'points' => $user->points,
+            'invited_people' => $invited,
+            'invitation_token' => $user->invite->token,
+            'avatar' => $user->avatar_path ? $user->avatar_path : false,
+            'plan' => $user->hasPremium() ? 'Premium' : 'Standard'
+        ]);
     }
 
     /**

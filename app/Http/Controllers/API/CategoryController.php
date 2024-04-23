@@ -29,16 +29,14 @@ class CategoryController extends APIController
      */
     public function index()
     {
-        $collection = Category::all();
+        $collection = Category::select('id', 'name')->get();
         return response([
-            'success' => true,
+            // 'success' => true,
             'data' => $collection,
-            'message' => 'Objects fetched',
-            'count' => $collection->count()
+            // 'message' => 'Objects fetched',
+            // 'count' => $collection->count()
             ],
-            200,[
-                'X-Total-Count' => $collection->count()
-            ]);
+            200);
     }
 
     /**
