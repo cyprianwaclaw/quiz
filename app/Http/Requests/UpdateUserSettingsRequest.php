@@ -8,6 +8,8 @@ use App\Rules\Nip;
 use App\Rules\Postalcode;
 use App\Rules\Regon;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateUserSettingsRequest extends FormRequest
 {
@@ -34,7 +36,7 @@ class UpdateUserSettingsRequest extends FormRequest
             'name' => 'sometimes|string',
             'surname' => 'sometimes|string',
             'email' => 'sometimes|email',
-            'phone' => 'sometimes|digits:9',
+            'phone' => 'sometimes',
 
             'company_name' => ['string','required_with:nip,regon,city,postcode,street,building_number,house_number'],
             'nip' => ['required_with:company_name,regon,city,postcode,street,building_number,house_number', new Nip()],
@@ -43,7 +45,7 @@ class UpdateUserSettingsRequest extends FormRequest
             'postcode' => ['required_with:company_name,nip,regon,city,street,building_number,house_number', new Postalcode('PL')],
             'street' => ['required_with:company_name,nip,regon,city,postcode,building_number,house_number', 'min:3'],
             'building_number' => ['required_with:company_name,nip,regon,city,postcode,street,house_number', 'string', 'max:5'],
-            'house_number' => ['required_with:company_name,nip,regon,city,postcode,street,building_number', 'string', 'max:5'],
+            'house_number' => [],
 
             'iban' => ['required_with:bank_name,swift', new Iban()],
             'bank_name' => ['required_with:iban,swift', 'string'],
@@ -56,5 +58,21 @@ class UpdateUserSettingsRequest extends FormRequest
             'phone' => preg_replace('/[^0-9]+/', '', $this->phone),
         ]);
 
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $errors = $validator->errors()->toArray();
+
+        // Przekształć tablicę błędów na obiekt JSON z pierwszym komunikatem
+        $formattedErrors = [];
+        foreach ($errors as $field => $messages) {
+            // Zwróć tylko pierwszy komunikat błędu
+            $formattedErrors[$field] = ['message' => $messages[0]];
+        }
+
+        throw new HttpResponseException(response()->json([
+            'errors' => $formattedErrors
+        ], 422));
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Requests\StoreQuestionRequest;
 use App\Http\Resources\AnswerResource;
 use App\Http\Resources\QuestionResource;
 use App\Models\Answer;
+use App\Models\Quiz;
 use App\Models\AnswerUser;
 use App\Models\Question;
 use Illuminate\Database\QueryException;
@@ -34,13 +35,15 @@ class QuestionController extends APIController
     public function index()
     {
         $collection = Question::all();
-        return response([
-            'success' => true,
-            'data' => $collection,
-            'message' => 'Objects fetched',
-            'count' => $collection->count()
-        ],
-            200, [
+        return response(
+            [
+                'success' => true,
+                'data' => $collection,
+                'message' => 'Objects fetched',
+                'count' => $collection->count()
+            ],
+            200,
+            [
                 'X-Total-Count' => $collection->count()
             ]
         );
@@ -118,33 +121,20 @@ class QuestionController extends APIController
      *
      * @param Question $question
      */
-    public function destroy(Question $question)
+    public function destroy($id)
     {
         try {
-            $question->deleteOrFail();
-        } catch (QueryException $exception){
-            return response(['message'=>'Something is wrong. Please check your request'], Response::HTTP_BAD_REQUEST);
-            //TODO: musisz najpierw usunąć połączone pytania
+            $question = Question::findOrFail($id);
+            $question->answers()->delete();
+            $question->delete();
+
+            return response()->json(['message' => 'Question and related answers deleted successfully.'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Question not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error deleting question: ' . $e->getMessage()], 400);
         }
-        return $this->sendResponse(null, null, 204);
     }
-/*
-    public function destroy(Question $question): JsonResponse
-    {
-        $aus = AnswerUser::where('question_id', $question->id)->get();
-        foreach ($aus as $au) {
-            $au->delete();
-        }
-        $question->correct_answer_id = null;
-        $question->save();
-        $answers = Answer::where('question_id', $question->id)->get();
-        foreach ($answers as $answer) {
-            $answer->delete();
-        }
-        $question->delete();
-        return $this->sendResponse(null, null, 204);
-    }
-*/
 
     /**
      * Get list of answers belongs to question
@@ -160,13 +150,15 @@ class QuestionController extends APIController
     public function getAnswers(Question $id)
     {
         $collection = $id->answers;
-        return response([
-            'success' => true,
-            'data' => $collection,
-            'message' => 'Objects fetched',
-            'count' => $collection->count()
-        ],
-            200, [
+        return response(
+            [
+                'success' => true,
+                'data' => $collection,
+                'message' => 'Objects fetched',
+                'count' => $collection->count()
+            ],
+            200,
+            [
                 'X-Total-Count' => $collection->count()
             ]
         );
@@ -187,15 +179,45 @@ class QuestionController extends APIController
     public function destroyAnswers(Question $id)
     {
         $deleted_count = $id->answers()->delete();
-        if($deleted_count) {
-            return response(null,
-                204, [
+        if ($deleted_count) {
+            return response(
+                null,
+                204,
+                [
                     'X-Total-Count' => $deleted_count
                 ]
             );
-        }
-        else {
+        } else {
             return response(null, 304);
         }
+    }
+
+    /**
+     * Get list of questions belongs to quiz
+     *
+     * Also return header response `X-Total-Count` containing the number of fetched objects.
+     *
+     * @responseFile status=200 scenario="Question fetched" storage/api-docs/responses/questions/index.200.json
+     * @responseFile status=401 scenario="Unauthenticated" storage/api-docs/responses/401.json
+     *
+     * @param Quiz $id
+     * @return Application|ResponseFactory|JsonResponse|Response
+     */
+    public function getQuestions($id)
+    {
+        // $collection = $id->questions;
+
+        $quiz = Quiz::findOrFail($id)->questions();
+        $quizQuestions = Question::where('quiz_id', $quiz);
+        return response(
+            [
+                'success' => true,
+                'data' => $quiz,
+                'question' => $quizQuestions,
+
+                // 'message' => 'Objects fetched',
+                // 'count' => $collection->count()
+            ],
+        );
     }
 }

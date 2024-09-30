@@ -202,7 +202,7 @@ class Iban  implements Rule
 
     public function message(): string
     {
-        return 'The :attribute is invalid.';
+        return 'Numer :attribute jest niepoprawny';
         // TODO: Implement message() method.
     }
 }

@@ -30,9 +30,9 @@ class QuizSubmissionController extends APIController
     {
         /** @var User $user */
         $user = auth()->user();
-        if(!$user->hasPremium()){
-            return $this->sendError('Zasubskrybuj pakiet premium, aby rozwiązywać quizy');
-        }
+        // if(!$user->hasPremium()){
+        //     return $this->sendError('Zasubskrybuj pakiet premium, aby rozwiązywać quizy');
+        // }
         $quiz_submission = new QuizSubmission();
         $quiz_submission->quiz_id = $quiz->id;
         $quiz_submission->user_id = $user->id;
@@ -78,9 +78,10 @@ class QuizSubmissionController extends APIController
             ['quiz_submission_id', '=', $quizSubmission->id],
         ]);
         $answer = Answer::findOrFail($validated['answer_id']);
-        if ($user->cannot('update', [$submissionAnswer, $answer])) {
-            return $this->sendError( 'Unauthorized','You cannot do this',401);
-        }
+        // !walidacja premium plan
+        // if ($user->cannot('update', [$submissionAnswer, $answer])) {
+            // return $this->sendError( 'Unauthorized','You cannot do this',401);
+        // }
         // if($submissionAnswer->answer()->associate($answer)->save()){
         //     event(new AnsweredQuestion($user, $answer->correct));
         //     $response = [

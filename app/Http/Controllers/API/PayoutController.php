@@ -30,15 +30,42 @@ class PayoutController extends APIController
      * @responseFile status=401 scenario="Unauthenticated" storage/api-docs/responses/401.json
      * @responseFile status=404 scenario="User not found" storage/api-docs/responses/resource.404.json
      */
-    public function index(User $user = null, Request $request ): Response|Application|ResponseFactory
+    public function index(Request $request)
     {
-        if ($user == null) {
-            $user = User::findOrFail(auth()->id());
-        }
-        $perPage = 15;
+
+        $user = User::findOrFail(auth()->id());
+
+
+        $perPage = 14;
         $page = $request->input('page', 1);
         $query = $user->payouts()->orderBy('created_at', 'desc')->paginate($perPage, ['*'], 'page', $page);
-        return $this->sendCollection($query);
+
+        $statusMap = [
+            'in_progress' => 'W oczekiwaniu',
+            'success' => 'Sukces',
+            'fail' => 'Błąd'
+        ];
+
+
+        $mappedData = $query->getCollection()->map(function ($item) use ($statusMap) {
+            return [
+                'amount' => $item->amount,
+                'status' => $statusMap[$item->status] ?? 'Nieznany',
+                // 'created_at' => $item->created_at->toDateTimeString(),
+                'date' => $item->created_at->format('d.m.Y'),
+            ];
+        });
+        $query->setCollection($mappedData);
+
+        return response()->json([
+            "payouts" => $query->items(),
+            'pagination' => [
+                'per_page' => $query->perPage(),
+                'count' => $query->total(),
+                'current_page' => $query->currentPage(),
+                'last_page' => $query->lastPage(),
+            ],
+        ]);
     }
 
     /**
@@ -55,7 +82,7 @@ class PayoutController extends APIController
         $validated = $request->validate([
             'points' => 'required|integer|min:1',
         ]);
-        $this->authorize('create',[Payout::class, $validated['points']]);
+        $this->authorize('create', [Payout::class, $validated['points']]);
         $payout = new Payout();
         $payout->user_id = $request->user()->id;
         $payout->points = $validated['points'];
@@ -83,8 +110,8 @@ class PayoutController extends APIController
         $this->authorize('update', $payout);
         $input = $request->validated();
         $payout->status = $input['status'];
-        if($payout->save())
-            if($payout->wasChanged('status'))
+        if ($payout->save())
+            if ($payout->wasChanged('status'))
                 return $this->sendSuccess();
             else
                 return $this->sendError(null, null, 304);

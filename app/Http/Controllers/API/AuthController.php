@@ -134,6 +134,9 @@ class AuthController extends APIController
         return response([
             'user_name' => $user->name,
             'user_surname' => $user->surname,
+            'user_email' => $user->email,
+            'user_phone' => $user->phone,
+
             'answers' => [
                 'correct' => $stats->correct_answers,
                 'incorrect' => $stats->incorrect_answers,

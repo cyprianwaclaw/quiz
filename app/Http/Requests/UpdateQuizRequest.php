@@ -27,15 +27,16 @@ class UpdateQuizRequest extends FormRequest
         return [
             'category_id' => 'sometimes|exists:App\Models\Category,id',
             'title' => 'sometimes|required|min:3',
+            'difficulty' => 'in:easy,medium,hard', // Ograniczenie do trzech opcji
             'description' => 'nullable',
             'image' => [
                 'sometimes',
                 'image',
-                Rule::dimensions()
-                    ->minWidth(100)
-                    ->minHeight(100)
-                    ->maxWidth(1000)
-                    ->maxHeight(1000),
+                // Rule::dimensions()
+                //     ->minWidth(100)
+                //     ->minHeight(100)
+                //     ->maxWidth(1000)
+                //     ->maxHeight(1000),
             ]
         ];
     }
@@ -62,6 +63,10 @@ class UpdateQuizRequest extends FormRequest
             'title' => [
                 'description' => 'The title of the quiz category.',
                 'example' => 'Quiz title',
+            ],
+            'difficulty' => [
+                'description' => 'The difficulty of the quiz.',
+                'example' => 'hard',
             ],
             'description' => [
                 'description' => 'The description of the quiz.',
