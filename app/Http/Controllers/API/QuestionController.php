@@ -64,7 +64,8 @@ class QuestionController extends APIController
             // Example: Pytanie
             'question' => 'required',
             // Example: 1
-            'quiz_id' => 'required|exists:App\Models\Quiz,id',
+            'quiz_id' => 'exists:App\Models\Quiz,id',
+            'competition_id' => 'exists:App\Models\Competition,id',
         ]);
         $question = Question::create($input);
         return $this->sendResponse(new QuestionResource($question), 'Object created.', 201);

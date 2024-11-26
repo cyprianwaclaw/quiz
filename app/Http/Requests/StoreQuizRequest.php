@@ -41,7 +41,7 @@ class StoreQuizRequest extends FormRequest
                     ->maxWidth(1000)
                     ->maxHeight(1000),*/
             ],
-            'time' => 'integer|min:0',
+            'time' => 'required',
             'difficulty' => [new In(QuizDifficulty::TYPES)]
         ];
     }

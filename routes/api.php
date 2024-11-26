@@ -3,6 +3,8 @@
 use App\Http\Controllers\API\AnswerController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\CompetitionSubmissionController;
+use App\Http\Controllers\API\CompetitionController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\SampleController;
 use App\Http\Controllers\API\PayoutController;
@@ -43,7 +45,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('popular', [QuizController::class, 'popular']);
         Route::get('latest', [QuizController::class, 'latest']);
         Route::get('for-you', [QuizController::class, 'forYou']);
-        // nowy endpoint do sortowaniaz
+        // nowy endpoint do sortowania
         Route::get('all', [QuizController::class, 'getAllS']);
     });
 
@@ -65,6 +67,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('user/getInvitationToken', [AuthController::class, 'getInvitationToken']);
     Route::post('user/uploadAvatar', [UserSettingsController::class, 'uploadUserPhoto']);
     Route::get('user/quizzes', [QuizController::class, 'getUserQuizzes']);
+    Route::get('competitions', [CompetitionController::class, 'competitions']);
+    // Route::get('user/competitions', [CompetitionController::class, 'userCompetitions']);
     Route::get('user/getPlan', [UserPlanController::class, 'getUserPlan']);
     Route::get('user/hasPremium', [UserPlanController::class, 'userHasPremium']);
 
@@ -76,9 +80,25 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('{quiz}/start', [QuizSubmissionController::class, 'start']);
         Route::post('submission/{quiz_submission}/answerQuestion', [QuizSubmissionController::class, 'answer_question']);
         Route::get('submission/{quiz_submission}/getNextQuestion', [QuizSubmissionController::class, 'getNextQuestion']);
+    }); 
+
+    Route::prefix('competition')->group(function () {
+        // Route::get('{quiz}', [QuizController::class, 'show']);
+        // Route::get('edit/{quiz}', [QuizController::class, 'edit']);
+        // Route::get('{quiz}/activate', [QuizController::class, 'activate']);
+        // Route::get('{quiz}/deactivate', [QuizController::class, 'deactivate']);
+        Route::post('/new', [CompetitionController::class, 'store']);
+        Route::get('/all', [CompetitionController::class, 'allCompetitions']);
+
+        Route::get('{competition}/start', [CompetitionSubmissionController::class, 'start']);
+        Route::get('{competition}/bestAnswers', [CompetitionSubmissionController::class, 'bestAnswers']);
+        // Route::post('submission/{competition_submision}/answerQuestion', [CompetitionSubmissionController::class, 'answer_question']);
+        Route::post('submission/{submision}/answerQuestion', [CompetitionSubmissionController::class, 'answer_question2']);
+        // Route::get('submission/{quiz_submission}/getNextQuestion', [QuizSubmissionController::class, 'getNextQuestion']);
     });
 
     Route::prefix('user')->group(function () {
+        Route::get('competitions', [CompetitionController::class, 'userCompetitions']);
         Route::get('getInvitedUsers', [UserController::class, 'getInvitedUsers']);
         Route::get('stats', [UserStatsController::class, 'show']);
         Route::get('settings', [UserSettingsController::class, 'show']);

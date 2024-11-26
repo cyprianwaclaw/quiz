@@ -47,4 +47,8 @@ class SubmissionAnswer extends Model
     {
         return $this->belongsTo(QuizSubmission::class);
     }
+    public function competition_submission()
+    {
+        return $this->belongsTo(CompetitionSubmission::class);
+    }
 }

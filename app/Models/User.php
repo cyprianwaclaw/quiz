@@ -120,6 +120,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Quiz::class);
     }
+    public function competitions()
+    {
+        return $this->hasMany(Quiz::class);
+    }
 
     public function financial()
     {

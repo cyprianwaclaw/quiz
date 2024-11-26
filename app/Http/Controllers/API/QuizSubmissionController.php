@@ -16,6 +16,8 @@ use Illuminate\Http\JsonResponse;
 
 class QuizSubmissionController extends APIController
 {
+
+    protected $gameCorrectQuestion = 0;
     /**
      * Start quiz
      * @group Quiz
@@ -46,12 +48,12 @@ class QuizSubmissionController extends APIController
             $submission_answer->save();
         }
 
-//        event(new QuizStarted($quiz, $user));
+        //    event(new QuizStarted($quiz, $user));
         return $this->sendResponse([
             'submission_id' => $quiz_submission->id,
+            'quiz_id' => $quiz,
             'next_question' => $quiz_submission->getNextQuestion(),
         ]);
-
     }
 
     /**
@@ -80,27 +82,18 @@ class QuizSubmissionController extends APIController
         $answer = Answer::findOrFail($validated['answer_id']);
         // !walidacja premium plan
         // if ($user->cannot('update', [$submissionAnswer, $answer])) {
-            // return $this->sendError( 'Unauthorized','You cannot do this',401);
+        // return $this->sendError( 'Unauthorized','You cannot do this',401);
         // }
-        // if($submissionAnswer->answer()->associate($answer)->save()){
-        //     event(new AnsweredQuestion($user, $answer->correct));
-        //     $response = [
-        //         'submission_id' => $quizSubmission->id,
-        //         'is_correct' => $answer->correct,
-        //         'next_question' => $this->getNextQuestion($quizSubmission),
-        //     ];
-        //     if (is_null($response['next_question'])) {
-        //         $quizDuration = gmdate('i:s', $quizSubmission->created_at->diffInSeconds($quizSubmission->ended_at));
-        //         $response['quiz_time'] = $quizDuration;
-        //     }
+
         if ($submissionAnswer->answer()->associate($answer)->save()) {
             $isCorrect = $answer->correct;
 
             // Update user stats
-            $user = User::find(auth()->id());
+            // $user = User::find(auth()->id());
             $userStats = $user->stats;
-
+            $gameCorrectQuestion = 0;
             if ($isCorrect) {
+                $this->gameCorrectQuestion += 1;
                 $userStats->increment('correct_answers');
             } else {
                 $userStats->increment('incorrect_answers');
@@ -115,10 +108,15 @@ class QuizSubmissionController extends APIController
                 'is_correct' => $isCorrect,
                 'next_question' => $this->getNextQuestion($quizSubmission),
             ];
-
+            // questions_count
+            $quizId = QuizSubmission::find($quizSubmission->id)->quiz_id;
             if (is_null($response['next_question'])) {
                 $quizDuration = gmdate('i:s', $quizSubmission->created_at->diffInSeconds($quizSubmission->ended_at));
                 $response['quiz_time'] = $quizDuration;
+                // $response['quiz_id'] = $quizId;
+                $response['game_correct_question'] = $this->gameCorrectQuestion;
+                $response['quiz_questions_count'] = Quiz::find($quizId)->questions_count;
+                $response['quiz_id_data'] = Quiz::find($quizId)->title;
             }
 
             return $this->sendResponse($response);
@@ -139,5 +137,4 @@ class QuizSubmissionController extends APIController
     {
         return $quizSubmission->getNextQuestion();
     }
-
 }

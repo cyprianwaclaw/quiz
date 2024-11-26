@@ -16,7 +16,8 @@ class CreateQuestionsTable extends Migration
         Schema::disableForeignKeyConstraints();
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quiz_id')->constrained();
+            $table->foreignId('quiz_id')->nullable();
+            $table->foreignId('competition_id')->nullable();
             $table->string('question', 200);
             $table->timestamps();
         });
