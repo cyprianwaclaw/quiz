@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-
+Route::get('competitionFinished/{competition}/bestAnswers', [CompetitionSubmissionController::class, 'bestAnswers']);
 Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
     Route::post('user/givePremium', [UserPlanController::class, 'givePremium']);
 });
@@ -80,7 +80,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('{quiz}/start', [QuizSubmissionController::class, 'start']);
         Route::post('submission/{quiz_submission}/answerQuestion', [QuizSubmissionController::class, 'answer_question']);
         Route::get('submission/{quiz_submission}/getNextQuestion', [QuizSubmissionController::class, 'getNextQuestion']);
-    }); 
+    });
 
     Route::prefix('competition')->group(function () {
         // Route::get('{quiz}', [QuizController::class, 'show']);
@@ -91,9 +91,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('/all', [CompetitionController::class, 'allCompetitions']);
 
         Route::get('{competition}/start', [CompetitionSubmissionController::class, 'start']);
-        Route::get('{competition}/bestAnswers', [CompetitionSubmissionController::class, 'bestAnswers']);
+        // Route::get('{competition}/bestAnswers', [CompetitionSubmissionController::class, 'bestAnswers']);
         // Route::post('submission/{competition_submision}/answerQuestion', [CompetitionSubmissionController::class, 'answer_question']);
-        Route::post('submission/{submision}/answerQuestion', [CompetitionSubmissionController::class, 'answer_question2']);
+        Route::post('submission/{submision}/answerQuestion', [CompetitionSubmissionController::class, 'answer_question']);
         // Route::get('submission/{quiz_submission}/getNextQuestion', [QuizSubmissionController::class, 'getNextQuestion']);
     });
 

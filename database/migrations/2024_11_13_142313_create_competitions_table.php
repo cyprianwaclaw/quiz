@@ -17,12 +17,14 @@ class CreateCompetitionsTable extends Migration
         Schema::create('competitions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->nullable()->constrained();
-            $table->foreignId('user_id')->nullable()->constrained();
             $table->string('title')->nullable();
             $table->string('description')->nullable();
             $table->string('image')->nullable();
-            $table->integer('time')->nullable();
-            $table->dateTime('date')->nullable();
+            $table->integer('first_points')->nullable();
+            $table->integer('second_points')->nullable();
+            $table->integer('third_points')->nullable();
+            $table->dateTime('time_start')->nullable();
+            $table->dateTime('time_end')->nullable();
             $table->enum('difficulty', QuizDifficulty::TYPES)->default(QuizDifficulty::EASY);
             $table->timestamps();
         });

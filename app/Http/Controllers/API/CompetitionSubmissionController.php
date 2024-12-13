@@ -52,7 +52,7 @@ class CompetitionSubmissionController extends Controller
         ], 200);
     }
 
-    public function answer_question2(AnswerQuestionRequest $request, $competitionSubmissionId)
+    public function answer_question(AnswerQuestionRequest $request, $competitionSubmissionId)
     {
         $user = User::find(auth()->id());
         $validated = $request->validated();
@@ -80,164 +80,67 @@ class CompetitionSubmissionController extends Controller
         }
         // Pobierz kolejne pytanie
         $nextQuestion = $competitionSubmission->getNextQuestion();
+        // $competitionDuration = gmdate('i:s', $submissionAnswer->created_at->diffInSeconds($submissionAnswer->ended_at));
+        $competitionDuration = $submissionAnswer->created_at->diffInSeconds($submissionAnswer->ended_at);
+        if ($nextQuestion == null) {
 
+            $competitionSubmission->duration = $competitionDuration;
+            $competitionSubmission->save();
+        }
         return response()->json([
             // 'current_question' => new QuestionResource($question),
             'is_correct' => $isCorrect,
-            'next_question' => $nextQuestion, // Kolejne pytanie lub `null`, jeśli to był ostatnie pytanie
+            'next_question' => $nextQuestion,
+            'duration' => $competitionDuration ? $competitionDuration : null,
         ], 200);
     }
 
 
-    public function bestAnswers($competitionId)
-    {
-        // Pobieramy wszystkie submissiony związane z danym competition
-        $competitionSubmissions = CompetitionSubmission::where('competition_id', $competitionId)->orderByDesc('correct_answers')->select('user_id', 'correct_answers' )->get();
+    // public function bestAnswers($competitionId)
+    // {
+    //     $competitionSubmissions = CompetitionSubmission::where('competition_id', $competitionId)
+    //         ->orderByDesc('correct_answers') // Sortowanie po poprawnych odpowiedziach (malejąco)
+    //         ->orderBy('duration')           // Sortowanie po czasie (rosnąco)
+    //         ->select('id', 'user_id', 'correct_answers', 'duration')
+    //         ->get()
+    //         ->map(function ($submission, $index) {
+    //             $submission->place = $index + 1; // Dodaj pole `place` z miejscem (indeks + 1)
+    //             return $submission;
+    //         });
 
-        // Zbieramy dane użytkowników i liczymy poprawne odpowiedzi
-        // $bestAnswers = [];
+    //     // Aktualizuj punkty użytkowników na podstawie miejsca
+    //     foreach ($competitionSubmissions as $submission) {
+    //         $user = User::find($submission->user_id);
 
-        // foreach ($competitionSubmissions as $submission) {
-        //     $user = $submission->user; // Zakładając, że CompetitionSubmission ma relację z User
-        //     // $correctAnswersCount = $submission->answers()->where('correct', 1)->count();
+    //         if ($user) {
+    //             // Przyznawanie punktów na podstawie miejsca
+    //             switch ($submission->place) {
+    //                 case 1:
+    //                     $user->points += 100; // Punkty za 1. miejsce
+    //                     break;
+    //                 case 2:
+    //                     $user->points += 50; // Punkty za 2. miejsce
+    //                     break;
+    //                 case 3:
+    //                     $user->points += 25; // Punkty za 3. miejsce
+    //                     break;
+    //             }
 
-        //     // Dodajemy użytkownika do listy
-        //     $bestAnswers[] = [
-        //         'user_id' => $user->id,
-        //         'username' => $user->name,
-        //         'correct_answers_count' => 1,
-        //         // 'correct_answers_count' => $correctAnswersCount,
-        //     ];
-        // }
+    //             // Zapisz zaktualizowane punkty użytkownika
+    //             $user->save();
+    //         }
 
-        // Sortujemy odpowiedzi po liczbie poprawnych odpowiedzi (malejąco)
-        // usort($bestAnswers, function ($a, $b) {
-        //     return $b['correct_answers_count'] - $a['correct_answers_count'];
-        // });
+    //         // Zaktualizuj miejsce w tabeli `competition_submissions`
+    //         $competitionSubmission = CompetitionSubmission::find($submission->id);
+    //         if ($competitionSubmission) {
+    //             $competitionSubmission->place = $submission->place;
+    //             $competitionSubmission->save();
+    //         }
+    //     }
 
-        // Zwracamy najlepsze odpowiedzi
-        return response()->json([
-            'best_answers' => $competitionSubmissions,
-        ]);
-    }
-
-
-    public function answer_question(AnswerQuestionRequest $request, $competitionSubmission)
-    {
-        $user = User::find(auth()->id());
-        $validated = $request->validated();
-        $question = Question::findOrFail($validated['question_id']);
-        $answer = Answer::findOrFail($validated['answer_id']);
-
-        // Znajdź lub utwórz odpowiedź w tabeli `competition_submission_answers`
-        $submissionAnswer = CompetitionSubmissionAnswer::firstOrNew([
-            'competition_submission_id' => $competitionSubmission,
-            'question_id' => $question->id,
-            'answer_id' => $answer->id,
-
-        ]);
-
-        // Przypisz odpowiedź
-        // $submissionAnswer->answer_id = $answer->id;
-        // $submissionAnswer->save();
-
-        // Upewnij się, że wartości są przypisane przed zapisem
-        // $submissionAnswer->competition_submission_id = $competitionSubmission->id;
-        // $submissionAnswer->question_id = $question->id;
-        // $submissionAnswer->answer_id = $answer->id;
-        $submissionAnswer->save();
-
-        // Sprawdź, czy odpowiedź jest poprawna
-        // $isCorrect = $answer->correct;
-
-        // Zaktualizuj statystyki użytkownika
-        // $userStats = $user->stats;
-        // if ($isCorrect) {
-        //     $userStats->increment('correct_answers');
-        // } else {
-        //     $userStats->increment('incorrect_answers');
-        // }
-        // $userStats->save();
-
-        // Wyślij wydarzenie lub odpowiedź JSON
-        // event(new AnsweredQuestion($user, $isCorrect));
-
-        return response()->json([
-            'data' => $question,
-            // 'submission_answer' => $submissionAnswer,
-            'submission' => $competitionSubmission,
-            'data' => $submissionAnswer,
-            'isCorrect_answer' => $answer->correct == 1 ? true : false,
-            // 'next_question' => $competitionSubmission->getNextQuestion(),
-
-        ], 200);
-    }
-
-    public function answer_question1(AnswerQuestionRequest $request, CompetitionSubmission $competitionSubmission)
-    {
-        $user = User::find(auth()->id());
-        $validated = $request->validated();
-        $question = Question::findOrFail($validated['question_id']);
-        $submissionAnswer = CompetitionSubmissionAnswer::firstWhere([
-            ['question_id', '=', $question->id],
-            // ['quiz_submission_id', '=', $competitionSubmission->id],
-            ['id', '=', $competitionSubmission->id],
-        ]);
-
-        // if (!$submissionAnswer) {
-        //     return response()->json([
-        //         'error' => 'Submission answer not found',
-        //     ], 404);
-
-        $answer = Answer::findOrFail($validated['answer_id']);
-        // !walidacja premium plan
-        // if ($user->cannot('update', [$submissionAnswer, $answer])) {
-        // return $this->sendError( 'Unauthorized','You cannot do this',401);
-        // }
-        // $submissionAnswer->answer()->associate($answer)->save();
-        // if ($submissionAnswer->answer()->associate($answer)->save()) {
-
-        $isCorrect = $answer->correct;
-
-        // Update user stats
-        // $user = User::find(auth()->id());
-        $userStats = $user->stats;
-        // $gameCorrectQuestion = 0;
-        if ($isCorrect) {
-            // $this->gameCorrectQuestion += 1;
-            $userStats->increment('correct_answers');
-        } else {
-            $userStats->increment('incorrect_answers');
-        }
-
-        $userStats->save();
-
-        // event(new AnsweredQuestion($user, $isCorrect));
-
-        // $response = [
-        //     'submission_id' => $competitionSubmission->id,
-        //     'is_correct' => $isCorrect,
-        //     'next_question' => $this->getNextQuestion($competitionSubmission),
-        // ];
-        return response()->json([
-            // 'success' => true,
-            'data'    => $question,
-            'message' => $submissionAnswer,
-            'answer' => $answer,
-            // 'next_question' => $competition_submission->getNextQuestion(),
-        ], 200);
-        // questions_count
-        // $quizId = QuizSubmission::find($quizSubmission->id)->quiz_id;
-        // if (is_null($response['next_question'])) {
-        //     $quizDuration = gmdate('i:s', $quizSubmission->created_at->diffInSeconds($quizSubmission->ended_at));
-        //     $response['quiz_time'] = $quizDuration;
-        //     // $response['quiz_id'] = $quizId;
-        //     $response['game_correct_question'] = $this->gameCorrectQuestion;
-        //     $response['quiz_questions_count'] = Quiz::find($quizId)->questions_count;
-        //     $response['quiz_id_data'] = Quiz::find($quizId)->title;
-        // }
-
-        // return $this->sendResponse($response);
-        // }
-    }
+    //     // Zwracamy najlepsze odpowiedzi z miejscami
+    //     // return response()->json([
+    //     //     'best_answers' => $competitionSubmissions,
+    //     // ]);
+    // }
 }

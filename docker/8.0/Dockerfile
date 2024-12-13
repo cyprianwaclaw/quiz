@@ -54,6 +54,21 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY php.ini /etc/php/8.0/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
 
+# Zainstaluj cron
+RUN apt-get update && apt-get install -y cron
+
+# Kopiuj skrypt cron do kontenera
+COPY ./cron/laravel-schedule /etc/cron.d/laravel-schedule
+
+# Nadaj uprawnienia do pliku cron
+RUN chmod 0644 /etc/cron.d/laravel-schedule
+
+# Zarejestruj cron
+RUN crontab /etc/cron.d/laravel-schedule
+
+# Uruchom cron w tle
+CMD cron && php-fpm
+
 EXPOSE 8000
 
 ENTRYPOINT ["start-container"]

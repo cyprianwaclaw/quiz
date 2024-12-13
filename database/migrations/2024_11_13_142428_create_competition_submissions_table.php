@@ -17,6 +17,8 @@ class CreateCompetitionSubmissionsTable extends Migration
             $table->id();
             $table->foreignId('competition_id')->constrained();
             $table->integer('correct_answers')->default(0);
+            $table->integer('duration')->nullable();
+            $table->integer('place')->default(0);
             $table->foreignId('user_id')->constrained();
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('ended_at')->nullable();

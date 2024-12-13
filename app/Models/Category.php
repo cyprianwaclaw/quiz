@@ -35,6 +35,10 @@ class Category extends Model
     {
         return $this->hasMany(Quiz::class);
     }
+    public function competitions()
+    {
+        return $this->hasMany(Quiz::class);
+    }
     public function questions()
     {
         return $this->hasManyThrough(Question::class, Quiz::class);

@@ -14,9 +14,14 @@ class Competition extends Model
     protected $fillable = [
         'category_id',
         'title',
-        'description', 
+        'description',
+        'first_points',
+        'second_points',
+        'third_points',
         'image',
-        'user_id',
+        'time_start',
+        'time_end',
+        'difficulty',
     ];
 
     protected $appends = ['questions_count'];
