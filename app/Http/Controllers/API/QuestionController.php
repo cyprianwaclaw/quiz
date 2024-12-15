@@ -71,19 +71,21 @@ class QuestionController extends APIController
         return $this->sendResponse(new QuestionResource($question), 'Object created.', 201);
     }
 
-    /**
-     * Return specific question by ID
-     *
-     * @urlParam id integer required The ID of the question. Example: 1
-     * @responseFile 200 scenario="Question fetched" storage/api-docs/responses/questions/show.200.json
-     * @responseFile 404 scenario="Question not found" storage/api-docs/responses/resource.404.json
-     *
-     * @param $id
-     * @return JsonResponse
-     */
-    public function show(Question $question): JsonResponse
+    public function show(Request $request)
     {
-        return $this->sendResponse(new QuestionResource($question), 'Object fetched.');
+        $perPage = $request->input('per_page', 14);
+        $page = $request->input('page', 1);
+        $allQuestions = Question::where('competition_id', null)->orderBy('created_at', 'desc')->select('id', 'question')->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => $allQuestions->items(),
+            'pagination' => [
+                'per_page' => $allQuestions->perPage(),
+                'count' => $allQuestions->total(),
+                'current_page' => $allQuestions->currentPage(),
+                'last_page' => $allQuestions->lastPage(),
+            ],
+        ], 200);
     }
 
     /**

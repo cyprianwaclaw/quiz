@@ -58,11 +58,18 @@ class QuestionController extends Controller
      * @param  \App\Models\Question  $question
      * @return \Illuminate\Http\Response
      */
-    public function show(Question $question)
+    public function show(Request $request)
     {
-        return view('questions.show')->with([
-            'question' => $question,
-        ]);
+        $perPage = $request->input('per_page', 14);
+        $page = $request->input('page', 1);
+
+        $allQuestions = Question::all();
+
+        $paginatedQuestions = $allQuestions->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            $paginatedQuestions
+        ], 200);
     }
 
     /**

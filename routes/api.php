@@ -56,6 +56,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     Route::apiResource('questions', QuestionController::class, ["as" => "api"]);
     Route::prefix('questions')->group(function () {
+        Route::get('all', [QuestionController::class, 'show']);
         Route::get('{id}/answers', [QuestionController::class, 'getAnswers']);
         Route::delete('{id}/answers', [QuestionController::class, 'destroyAnswers']);
     });
@@ -87,6 +88,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         // Route::get('edit/{quiz}', [QuizController::class, 'edit']);
         // Route::get('{quiz}/activate', [QuizController::class, 'activate']);
         // Route::get('{quiz}/deactivate', [QuizController::class, 'deactivate']);
+        Route::post('/{id}/addQuestions', [CompetitionController::class, 'addQuestions']);
         Route::post('/new', [CompetitionController::class, 'store']);
         Route::get('/all', [CompetitionController::class, 'allCompetitions']);
 

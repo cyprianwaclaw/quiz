@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Category;
 use Carbon\Carbon;
+use App\Models\Question;
 use App\Models\Competition;
 use App\Http\Requests\StoreCompetitionRequest;
 use App\Models\CompetitionSubmission;
@@ -36,13 +37,13 @@ class CompetitionController extends Controller
         if (abs($dateDifference) > 7) {
             $result['text'] = $targetDate->format('d.m.Y') . ' o ' . $targetDate->format('H:i');
         } elseif ($dateDifference == 1) {
-            $result['text'] = 'jutro o ' . $targetDate->format('H:i');
+            $result['text'] = 'jutro od ' . $targetDate->format('H:i');
         } elseif ($dateDifference == 0) {
-            $result['text'] = 'dzisiaj o ' . $targetDate->format('H:i');
+            $result['text'] = 'dzisiaj od ' . $targetDate->format('H:i');
         } elseif ($dateDifference > 0) {
-            $result['text'] = 'za ' . $dateDifference . ' dni o ' . $targetDate->format('H:i');
+            $result['text'] = 'za ' . $dateDifference . ' dni od ' . $targetDate->format('H:i');
         } else {
-            $result['text'] = 'wczoraj o ' . $targetDate->format('H:i');
+            $result['text'] = 'wczoraj od ' . $targetDate->format('H:i');
         }
 
         return $result;
@@ -74,6 +75,29 @@ class CompetitionController extends Controller
         ], 200);
     }
 
+    // use App\Models\Question;
+
+    public function addQuestions(Request $request, int $id)
+    {
+        $questions = $request->input('questions'); // Pobiera tablicę 'questions' z żądania
+
+        if (is_array($questions)) {
+            // Aktualizacja rekordów w tabeli 'questions'
+            Question::whereIn('id', $questions)->update(['competition_id' => $id]);
+
+            return response()->json([
+                'success' => true,
+                'updated_questions' => $questions,
+                'competition_id' => $id,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid data. Expected an array of question IDs.',
+        ], 400);
+    }
+
     public function allCompetitions(Request $request)
     {
         $user = User::findOrFail(auth()->id());
@@ -93,8 +117,10 @@ class CompetitionController extends Controller
             ->toArray();
 
         // Pobierz konkursy, które nie zostały przesłane przez użytkownika
-        $allCompetitionsQuery = Competition::where('time_end', '>', $currentTime)
-            ->whereNotIn('id', $submittedCompetitionIds);
+        // $allCompetitionsQuery = Competition::where('time_end', '>', $currentTime)
+        //     ->whereNotIn('id', $submittedCompetitionIds);
+
+        $allCompetitionsQuery = Competition::where('time_end', '>', $currentTime);
 
         // Użyj paginacji
         $paginatedCompetitions = $allCompetitionsQuery->paginate($perPage, ['*'], 'page', $page);
@@ -275,5 +301,3 @@ class CompetitionController extends Controller
         ], 200);
     }
 }
-
-
