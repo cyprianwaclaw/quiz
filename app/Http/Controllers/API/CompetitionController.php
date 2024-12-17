@@ -75,7 +75,6 @@ class CompetitionController extends Controller
         ], 200);
     }
 
-    // use App\Models\Question;
 
     public function addQuestions(Request $request, int $id)
     {
