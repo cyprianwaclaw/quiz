@@ -784,8 +784,6 @@ class QuizController extends APIController
                 'title' => $quiz->title,
                 'image' => $quiz->image,
                 'status' => $quiz->is_active == 1 ? true : false,
-                // 'created_at' => $quiz->created_at,
-                // 'category' => $quiz->category->name,
             ];
         });
 
@@ -801,4 +799,47 @@ class QuizController extends APIController
             ]
         ]);
     }
+
+    // !new code from gpt
+    // public function getUserQuizzes(Request $request)
+    // {
+    //     $user = auth()->user();
+    //     $perPage = 4;
+    //     $page = $request->input('page', 1);
+    //     $status = $request->input('section');
+
+    //     // Rozdzielenie ciągu znaków i wzięcie tylko pierwszego elementu
+    //     if ($status !== null) {
+    //         $status = explode('-', $status)[0];
+    //     }
+
+    //     $query = Quiz::where('user_id', $user->id)->with('category');
+
+    //     if ($status !== null) {
+    //         $query->where('is_active', $status == 'true' ? 1 : 0);
+    //     }
+
+    //     $userQuizzes = $query->paginate($perPage, ['*'], 'page', $page);
+
+    //     $mappedData = $userQuizzes->getCollection()->map(function ($quiz) {
+    //         return [
+    //             'id' => $quiz->id,
+    //             'title' => $quiz->title,
+    //             'image' => $quiz->image,
+    //             'status' => $quiz->is_active == 1 ? true : false,
+    //         ];
+    //     });
+
+    //     $userQuizzes->setCollection($mappedData);
+
+    //     return response()->json([
+    //         'quizzes' => $userQuizzes->items(),
+    //         'pagination' => [
+    //             'total' => $userQuizzes->total(),
+    //             'per_page' => $userQuizzes->perPage(),
+    //             'current_page' => $userQuizzes->currentPage(),
+    //             'last_page' => $userQuizzes->lastPage()
+    //         ]
+    //     ]);
+    // }
 }

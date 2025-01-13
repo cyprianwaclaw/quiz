@@ -144,7 +144,9 @@ class CompetitionController extends Controller
                 'awward' => [
                     'first_points' => $competition->first_points,
                     'second_points' => $competition->second_points,
+                       'third_points' => $competition->third_points,
                 ],
+                'fdsfsdf'=>'fdffdss',
                 'description' => $competition->description ?? null,
                 'date' => $this->calculateFullDaysDifference($currentTime, $competition->time_start)['text'],
                 'time_end' => $timeEndCompetition->format('H:i'),
