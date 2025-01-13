@@ -28,11 +28,11 @@ class UploadUserAvatarRequest extends FormRequest
             'avatar' => [
                 'required',
                 'image',
-                Rule::dimensions()
-                    ->minWidth(100)
-                    ->minHeight(100)
-                    ->maxWidth(600)
-                    ->maxHeight(600),
+                // Rule::dimensions()
+                //     ->minWidth(100)
+                //     ->minHeight(100)
+                //     ->maxWidth(600)
+                //     ->maxHeight(600),
             ],
         ];
     }
