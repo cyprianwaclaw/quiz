@@ -500,7 +500,9 @@ class QuizController extends APIController
         if (isset($input['time'])) $quiz->time = $input['time'];
         if (isset($input['difficulty'])) $quiz->difficulty = $input['difficulty'];
         if (isset($input['image']) && $input['image'] != NULL) {
-            $quiz->image = Storage::disk('quiz_images')->url($input['image']->store('', 'quiz_images'));
+            // $quiz->image = Storage::disk('quiz_images')->url($input['image']->store('', 'quiz_images'));
+            $image_path = $input['image']->store('', 'quiz_images');
+            $quiz->image = url('storage/quiz_images/' . basename($image_path));
         }
         $quiz->save();
         $quiz->refresh();
