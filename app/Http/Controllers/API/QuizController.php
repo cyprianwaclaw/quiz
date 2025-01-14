@@ -608,7 +608,7 @@ class QuizController extends APIController
                 'answers' => $question->answers->map(function ($answer) {
                     return [
                         'id' => $answer->id,
-                        'text' => $answer->answer,
+                        'answer' => $answer->answer,
                         'correct' => $answer->correct == 1 ? true : false,
                     ];
                 })
