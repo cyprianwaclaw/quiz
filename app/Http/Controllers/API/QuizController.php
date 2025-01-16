@@ -546,19 +546,45 @@ class QuizController extends APIController
      */
     public function updateQuizImage(Request $request, Quiz $quiz): JsonResponse
     {
-
+        // Walidacja pliku obrazu
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:20480',
         ]);
+
+        // Usunięcie poprzedniego obrazu, jeśli istnieje
         if ($quiz->image) {
-            Storage::disk('quiz_images')->delete($quiz->image);
+            $oldImagePath = str_replace(secure_url('storage/quiz_images/'), '', $quiz->image);
+            Storage::disk('quiz_images')->delete($oldImagePath);
         }
+
+        // Zapisanie nowego obrazu
         $imagePath = $request->file('image')->store('', 'quiz_images');
-        $quiz->image = Storage::disk('quiz_images')->url($imagePath);
+        $quiz->image = secure_url('storage/quiz_images/' . basename($imagePath));
+
+        // Zapisanie w bazie danych
         $quiz->save();
 
-        return response()->json(['message' => 'Image updated successfully.', $request->all()], 200);
+        // Zwrócenie odpowiedzi JSON
+        return response()->json([
+            'message' => 'Image updated successfully.',
+            'image_url' => $quiz->image,
+        ], 200);
     }
+    // public function updateQuizImage(Request $request, Quiz $quiz): JsonResponse
+    // {
+
+    //     $request->validate([
+    //         'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:20480',
+    //     ]);
+    //     if ($quiz->image) {
+    //         Storage::disk('quiz_images')->delete($quiz->image);
+    //     }
+    //     $imagePath = $request->file('image')->store('', 'quiz_images');
+    //     $quiz->image = Storage::disk('quiz_images')->url($imagePath);
+    //     $quiz->save();
+
+    //     return response()->json(['message' => 'Image updated successfully.', $request->all()], 200);
+    // }
 
 
 
