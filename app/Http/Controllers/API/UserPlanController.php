@@ -13,6 +13,7 @@ use Devpark\Transfers24\Exceptions\RequestException;
 use Devpark\Transfers24\Exceptions\RequestExecutionException;
 use Devpark\Transfers24\Requests\Transfers24;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class UserPlanController extends APIController
 {
@@ -43,6 +44,8 @@ class UserPlanController extends APIController
             $planSubscription = auth()->user()->newPlanSubscription('main', $plan);
             $planSubscription->ends_at = now();
             $planSubscription->save();
+            // return $this->$planSubscription;
+            Log::error('Błąd transakcji', ['error' =>   "payment"]);
 
             return $this->paymentTransaction($planSubscription, $plan);
         } else {
@@ -118,10 +121,12 @@ class UserPlanController extends APIController
                 $payment->error_code = $response->getErrorCode();
                 $payment->error_description = json_encode($response->getErrorDescription());
                 $payment->save();
-                return $this->sendError('Błąd');
+                return $this->sendError('Błąd__');
+                Log::error('Błąd transakcji', ['error' =>   $payment]);
+
             }
         } catch (RequestException | RequestExecutionException $e) {
-            \Log::error('Błąd transakcji', ['error' => $e]);
+            Log::error('Błąd transakcji', ['error' => $e]);
             return $this->sendError('Błąd transakcji');
         }
     }

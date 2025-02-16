@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Hash;
 use const Grpc\STATUS_PERMISSION_DENIED;
 use Illuminate\Support\Str;
 use App\Models\UserStats;
+use App\Http\Requests\RegisterUserRequest;
+use App\Http\Requests\Auth\LoginRequest;
 
 class AuthController extends APIController
 {
@@ -97,21 +99,38 @@ class AuthController extends APIController
      * @responseFile status=422 scenario="Validation error" storage/api-docs/responses/error.422.json
      * @unauthenticated
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $loginData = $request->validate([
-            'email' => 'email|required',
-            'password' => 'required|min:8'
-        ]);
-        if (!Auth::attempt($loginData)) {
-            return response(['message' => 'This User does not exist, check your details'], Response::HTTP_NOT_FOUND);
+        // $loginData = $request->validate([
+        //     'email' => 'email|required',
+        //     'password' => 'required|min:8'
+        // ]);
+        // if (!Auth::attempt($loginData)) {
+        //     return response(['message' => 'This User does not exist, check your details'], Response::HTTP_NOT_FOUND);
+        // }
+        // /** @var $user User */
+        // $user = Auth::user();
+
+        // $accessToken = $user->createToken('authToken')->plainTextToken;
+
+        // return response(['user' => auth()->user(), 'access_token' => $accessToken]);
+        $credentials = $request->only(['email', 'password']);
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json([
+                'errors' => [
+                    'notExist' => ['Podany użytkownik nie istnieje'],
+                ]
+            ], 401);
         }
-        /** @var $user User */
-        $user = Auth::user();
 
-        $accessToken = $user->createToken('authToken')->plainTextToken;
-
-        return response(['user' => auth()->user(), 'access_token' => $accessToken]);
+        return response()->json([
+            'status' => true,
+            'user_image' => $user->image,
+            'message' => 'Logged in Successfully',
+            'token' => $user->createToken("API TOKEN")->plainTextToken
+        ], 200);
     }
 
     /**
