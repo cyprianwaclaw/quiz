@@ -9,7 +9,8 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\UserPlanController;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerificationMail;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -24,6 +25,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect(\route('login'));
 });
+// Route::get('/preview-email', function () {
+//     return new VerificationMail("fdfd");
+// });
 Route::middleware(['auth', 'verified'])->group(function(){
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

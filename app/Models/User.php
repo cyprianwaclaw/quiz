@@ -10,63 +10,6 @@ use Laravel\Sanctum\HasApiTokens;
 use Rinvex\Subscriptions\Traits\HasPlanSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
-/**
- * App\Models\User
- *
- * @property string $name
- * @property string $surname
- * @property string $phone
- * @property string $email
- * @property string $password
- * @property int $invited_by
- * @property int $points
- * @property string $avatar_path
- * @property Company $company
- * @property Financial $financial
- * @property int $id
- * @property \Illuminate\Support\Carbon|null $email_verified_at
- * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Address|null $address
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Question[] $answeredQuestions
- * @property-read int|null $answered_questions_count
- * @property-read \App\Models\Invite|null $invite
- * @property-read \Illuminate\Database\Eloquent\Collection|User[] $invited
- * @property-read int|null $invited_count
- * @property-read User|null $inviting
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
- * @property-read int|null $notifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\Spatie\Permission\Models\Permission[] $permissions
- * @property-read int|null $permissions_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PlanSubscription[] $planSubscriptions
- * @property-read int|null $plan_subscriptions_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\Spatie\Permission\Models\Role[] $roles
- * @property-read int|null $roles_count
- * @property-read \App\Models\UserStats|null $stats
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Sanctum\PersonalAccessToken[] $tokens
- * @property-read int|null $tokens_count
- * @method static \Database\Factories\UserFactory factory(...$parameters)
- * @method static \Illuminate\Database\Eloquent\Builder|User newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|User permission($permissions)
- * @method static \Illuminate\Database\Eloquent\Builder|User query()
- * @method static \Illuminate\Database\Eloquent\Builder|User role($roles, $guard = null)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereAvatarPath($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereEmailVerifiedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereInvitedBy($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User wherePassword($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User wherePoints($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereRememberToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereSurname($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereUpdatedAt($value)
- * @mixin \Eloquent
- */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, HasPlanSubscriptions;
@@ -84,7 +27,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'invited_by',
         'points',
         'avatar_path',
-        'phone'
+        'phone',
+        'verification_code',
+        'email_verified_at',
+        'email_verified',
     ];
 
     /**

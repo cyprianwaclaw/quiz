@@ -30,8 +30,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
+// Route::post('register', [AuthController::class, 'register']); //stare
+Route::post('register', [AuthController::class, 'registerUser']); //nowe
+
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/send-new-code', [AuthController::class, 'sendNewCode']);
+
+Route::post('/reset-password-code', [AuthController::class, 'sendResetPasswordCode']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+Route::post('login', [AuthController::class , 'login']);
 Route::get('competitionFinished/{competition}/bestAnswers', [CompetitionSubmissionController::class, 'bestAnswers']);
 Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
     Route::post('user/givePremium', [UserPlanController::class, 'givePremium']);
@@ -121,4 +129,5 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('payouts/{payout}/setStatus', [PayoutController::class, 'setStatus']);
     Route::post('payouts', [PayoutController::class, 'store']);
 });
+
 Route::post('payment/status', [PaymentController::class, 'status']);

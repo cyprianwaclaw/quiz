@@ -6,35 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\API\UserResource;
 use App\Models\Invite;
 use Illuminate\Auth\Events\Registered;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Mail\test;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\MyMail;
+use App\Mail\VerificationMail;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use const Grpc\STATUS_PERMISSION_DENIED;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use App\Models\UserStats;
-use App\Http\Requests\RegisterUserRequest;
+use App\Http\Requests\Auth\RegisterUserRequest;
 use App\Http\Requests\Auth\LoginRequest;
 
 class AuthController extends APIController
 {
-    public function verifyUserEmail($id)
-    {
-        // $request->validate([
-        //  'user_id' => 'required|exists:users,id',
-        // ]);
-
-        $user = User::find($id);
-
-        // Przyjmij, że przyjmuje bieżącą datę i godzinę jako email_verified_atžž
-        $user->email_verified_at = now();
-        $user->save();
-
-        return response(['user' => $user]);
-    }
 
     /**
      * Registration
@@ -45,49 +34,26 @@ class AuthController extends APIController
      * @responseFile status=403 scenario="Registration limit reached" storage/api-docs/responses/auth/register.403.json
      * @responseFile status=404 scenario="Invitation token not found" storage/api-docs/responses/auth/register.403.json
      */
-    public function register(Request $request)
+
+    public function registerUser(registerUserRequest $request)
     {
-        $validatedData = $request->validate([
-            // Example: test5
-            'name' => 'required|max:55',
-            // Example: test@example.com
-            'email' => 'email|required|unique:users',
-            // Example: test123456
-            'password' => 'required|confirmed|min:8',
-            // Example: test123456
-            'password_confirmation' => 'required|same:password',
-            // Example: y12rOwSuEDxuI3691N1v
-            'invitation' => 'exists:App\Models\Invite,token'
+        $verificationCode = Str::random(6);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'verification_code' => $verificationCode,
         ]);
 
-        if ($request->invitation) {
-            $invite = Invite::where('token', $request->invitation)->first();
-            if ($invite) {
-                $validatedData['invited_by'] = $invite->user->id;
-                //                dd($invite->user->id);  // user id zgadza sie
-                //                return response('jakis jest');
-            } else {
-                return response(['message' => 'Invitation token not found'], Response::HTTP_NOT_FOUND);
-            }
-        } elseif (User::count() >= config('auth.max_register_users')) {
-            //            return response(['message'=>'Możesz się zarejestrować tylko przez link zapraszający'], Response::HTTP_FORBIDDEN);
-            return response(['message' => 'Registration by invitation only'], Response::HTTP_FORBIDDEN);
-        }
-        //        return response(['message' => 'Registartion successfully'], Response::HTTP_CREATED);
-        $validatedData['password'] = Hash::make($request->password);
-        $user = User::create($validatedData);
+        // Mail::to('cyprianwaclaw@gmail.com')->send(new VerificationMail($user, $request->page_name));
+        // Wysyłka e-maila z kodem do usera
+        Mail::to($user->email)->send(new VerificationMail($user, $request->page_name));
 
-        // Mail::to($user->email)->send(new test($user));
-        $token = Str::random(20);
-        Invite::create([
-            'user_id' => $user->id, // Przypisz ID nowo-zarejestrowanego użytkownika
-            'token' => $token,
-        ]);
-
-        // event(new Registered($user));
-        $accessToken = $user->createToken('authToken')->plainTextToken;
-        Auth::login($user);
-        return response(['message' => 'Registartion successfully', 'user' => $user, 'access_token' => $accessToken, 'invitation_token' => $invite->token,], Response::HTTP_CREATED);
+        return response()->json([
+            'success' => true,
+            'message' => 'Utworzono nowego użytkownika',
+            'token' => $user->createToken("API TOKEN")->plainTextToken
+        ], 201);
     }
 
     /**
@@ -101,34 +67,20 @@ class AuthController extends APIController
      */
     public function login(LoginRequest $request)
     {
-        // $loginData = $request->validate([
-        //     'email' => 'email|required',
-        //     'password' => 'required|min:8'
-        // ]);
-        // if (!Auth::attempt($loginData)) {
-        //     return response(['message' => 'This User does not exist, check your details'], Response::HTTP_NOT_FOUND);
-        // }
-        // /** @var $user User */
-        // $user = Auth::user();
-
-        // $accessToken = $user->createToken('authToken')->plainTextToken;
-
-        // return response(['user' => auth()->user(), 'access_token' => $accessToken]);
         $credentials = $request->only(['email', 'password']);
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'errors' => [
-                    'notExist' => ['Podany użytkownik nie istnieje'],
+                    'notExist' => ['Użytkownik nie istnieje'],
                 ]
             ], 401);
         }
 
         return response()->json([
-            'status' => true,
             'user_image' => $user->image,
-            'message' => 'Logged in Successfully',
+            'isVerified' => $user->email_verified ? true : false,
             'token' => $user->createToken("API TOKEN")->plainTextToken
         ], 200);
     }
@@ -162,8 +114,6 @@ class AuthController extends APIController
                 'all' => $stats->correct_answers + $stats->incorrect_answers,
             ],
             'points' => $user->points,
-            'invited_people' => $invited,
-            'invitation_token' => $user->invite->token,
             'avatar' => $user->avatar_path ? $user->avatar_path : false,
             'plan' => $user->hasPremium() ? 'Premium' : 'Standard'
         ]);
@@ -183,5 +133,134 @@ class AuthController extends APIController
     public function getInvitationToken()
     {
         return response(['invitationToken' => Auth::user()->invite->token]);
+    }
+
+    public function verifyEmail(Request $request)
+    {
+
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'verification_code' => 'required',
+        ], [
+            'verification_code.required' => 'Kod wymagany',
+        ]);
+
+        $user = User::where('email', $request->email)
+            ->where('verification_code', $request->verification_code)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Błędny kod weryfikacyjny'
+            ], 400);
+        }
+
+        $user->email_verified_at = now();
+        $user->email_verified = 1;
+        $user->verification_code = null;
+        $user->save();
+
+        Auth::login($user);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'E-mail został zweryfikowany pomyślnie',
+            'token' => $user->createToken("API TOKEN")->plainTextToken
+        ]);
+    }
+
+    public function sendNewCode(Request $request)
+    {
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Użytkownik nie istnieje'
+            ], 404);
+        }
+
+        $newVerificationCode = Str::random(6);
+        $user->verification_code = $newVerificationCode;
+        $user->save();
+
+        // Mail::to('cyprianwaclaw@gmail.com')->send(new VerificationMail($user, $request->page_name));
+        // Wysyłka e-maila z kodem do usera
+        Mail::to($user->email)->send(new VerificationMail($user, $request->page_name));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nowy kod weryfikacyjny został wysłany na Twój e-mail'
+        ], 200);
+    }
+
+    public function sendResetPasswordCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Błędny adres e-mail',
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Użytkownik o podanym adresie e-mail nie istnieje',
+            ], 404);
+        }
+
+        $verificationCode = Str::random(6);
+        $user->verification_code = $verificationCode;
+        $user->save();
+
+        // Mail::to('cyprianwaclaw@gmail.com')->send(new VerificationMail($user, $request->page_name));
+        // Wysyłka e-maila z kodem do usera
+        Mail::to($user->email)->send(new VerificationMail($user, $request->page_name));
+
+        return response()->json([
+            'success' => true,
+            'your-code' =>  $verificationCode,
+            'message' => 'Nowy kod weryfikacyjny został wysłany na Twój e-mail'
+        ], 200);
+    }
+
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'verification_code' => 'required|string',
+            'password' => 'required|string|min:6|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{6,}$/',
+            'confirm_password' => 'required|string|same:password',
+        ]);
+
+        $user = User::where('email', $request->email)
+            ->where('verification_code', $request->verification_code)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'messageError' => 'Błędny kod'
+            ], 400);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->verification_code = null;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Hasło zostało zmienione pomyślnie',
+            'isVerified' => $user->email_verified,
+        ]);
     }
 }

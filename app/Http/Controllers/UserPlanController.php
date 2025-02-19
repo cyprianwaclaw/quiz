@@ -61,7 +61,7 @@ class UserPlanController extends Controller
                 $payment->error_code = $response->getErrorCode();
                 $payment->error_description = json_encode($response->getErrorDescription());
                 $payment->save();
-                return back()->with('warning', 'Błąd');
+                return back()->with('warning', 'Błąd__');
             }
         } catch (RequestException|RequestExecutionException $e) {
                 \Log::error('Błąd transakcji', ['error' => $e]);

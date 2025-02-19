@@ -44,9 +44,9 @@ class LoginRequest extends FormRequest
     {
         return [
             'email.required' => 'Email jest wymagany',
-            'email.email' => 'Nieprawidłowy format emaila',
+            'email.email' => 'Nieprawidłowy email',
             'password.required' => 'Hasło jest wymagane',
-            'password.string' => 'Nieprawidłowy format hasła',
+            'password.string' => 'Nieprawidłowe hasło',
         ];
     }
 
