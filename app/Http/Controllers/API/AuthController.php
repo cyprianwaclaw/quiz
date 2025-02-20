@@ -68,12 +68,15 @@ class AuthController extends APIController
     public function login(LoginRequest $request)
     {
         $credentials = $request->only(['email', 'password']);
-        $user = User::where('email', $credentials['email'])->first();
 
+        $user = User::where('email', $credentials['email'])->first();
+        // !Hash::check($credentials['password'], $user->password)
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'errors' => [
-                    'notExist' => ['Użytkownik nie istnieje'],
+                    'notExist' => ['Błędne dane logowania'],
+                    // 'user' => $user,
+                    // 'password' => $credentials['password'],
                 ]
             ], 401);
         }
