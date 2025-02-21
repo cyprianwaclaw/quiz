@@ -45,6 +45,43 @@ class PaymentController extends APIController
     //     $payment->save();
     // }
 
+    // public function status(Request $request)
+    // {
+    //     \Log::info('Webhook received', $request->all());
+
+    //     $response = $this->transfers24->receive($request);
+    //     \Log::info('Response from Transfers24', [
+    //         'session_id' => $response->getSessionId(),
+    //         'status' => $response->isSuccess()
+    //     ]);
+
+    //     $payment = Payment::where('session_id', $response->getSessionId())->first();
+
+    //     if (!$payment) {
+    //         \Log::error('Payment not found for session_id', ['session_id' => $response->getSessionId()]);
+    //         return response()->json(['error' => 'Payment not found'], 404);
+    //     }
+
+    //     Invoice::generate($payment);
+
+    //     $payment->status = PaymentStatus::SUCCESS;
+    //     $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
+    //     $subscription->renew();
+    //     Invoice::generate($payment);
+    //     event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
+
+    //     $payment->save();
+    //     \Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
+
+    //     return response()->json(['message' => 'Payment status updated']);
+    // }
+
+
+
+    /**
+     * Trying change payment status to SUCCESS,
+     */
+
     public function status(Request $request)
     {
         \Log::info('Webhook received', $request->all());
@@ -62,16 +99,22 @@ class PaymentController extends APIController
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
-        Invoice::generate($payment);
+        \Log::info('Payment found', ['payment_id' => $payment->id]);
 
+        try {
+            \Log::info('Generating invoice before status change');
+            Invoice::generate($payment);
+            \Log::info('Invoice generated successfully');
+        } catch (\Exception $e) {
+            \Log::error('Error generating invoice', ['message' => $e->getMessage(), 'payment_id' => $payment->id]);
+        }
+
+        // 🔴 Sprawdź, czy kod dochodzi do tego miejsca
+        \Log::info('Updating payment status', ['payment_id' => $payment->id]);
         $payment->status = PaymentStatus::SUCCESS;
-        $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
-        $subscription->renew();
-        Invoice::generate($payment);
-        event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
-
         $payment->save();
-        \Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
+
+        \Log::info('Payment status updated successfully', ['payment_id' => $payment->id, 'status' => $payment->status]);
 
         return response()->json(['message' => 'Payment status updated']);
     }
