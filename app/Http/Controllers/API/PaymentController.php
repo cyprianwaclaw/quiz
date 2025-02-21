@@ -187,8 +187,8 @@ class PaymentController extends APIController
 
         \Log::info('Payment status updated successfully', ['payment_id' => $payment->id, 'status' => $payment->status]);
         // Pobierz użytkownika, który dokonał płatności
-        $user = $payment->user;
-        \Log::info('Payment usery', ['user' => $user]);
+        // $user = $payment->user;
+        // \Log::info('Payment usery', ['user' => $user]);
 
         // $this->giveUserPremium($user);
 
