@@ -42,10 +42,11 @@ class UserPlanController extends APIController
         $plan = Plan::findOrFail($request->input('plan'));
         if ($plan->price > 0) {
             $planSubscription = auth()->user()->newPlanSubscription('main', $plan);
-            $planSubscription->ends_at = now();
-            $planSubscription->save();
-            // return $this->$planSubscription;
-            Log::error('Błąd transakcji', ['error' =>   "payment"]);
+
+            // $planSubscription->ends_at = now();
+            // $planSubscription->save();
+            // // return $this->$planSubscription;
+            // Log::error('Błąd transakcji', ['error' =>   "payment"]);
 
             return $this->paymentTransaction($planSubscription, $plan);
         } else {
