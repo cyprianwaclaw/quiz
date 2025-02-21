@@ -60,4 +60,8 @@ class Payment extends Model
     {
         $query->where('status', PaymentStatus::SUCCESS);
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

@@ -20,29 +20,43 @@ class PaymentController extends APIController
 {
     private Transfers24 $transfers24;
 
-    private function giveUserPremium(User $user)
-    {
-        // Sprawdź, czy użytkownik już ma aktywną subskrypcję
-        $existingSubscription = $user->planSubscriptions()
-            ->whereNull('canceled_at')
-            ->where(function ($query) {
-                $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
-            })->first();
+    // private function giveUserPremium(User $user)
+    // {
+    //     // Sprawdź, czy użytkownik już ma aktywną subskrypcję
+    //     $existingSubscription = $user->planSubscriptions()
+    //         ->whereNull('canceled_at')
+    //         ->where(function ($query) {
+    //             $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
+    //         })->first();
 
-        if ($existingSubscription) {
-            // Jeśli użytkownik ma aktywną subskrypcję, przedłuż ją o miesiąc
-            $existingSubscription->update([
-                'ends_at' => now()->addMonth()
-            ]);
-        } else {
-            // Jeśli użytkownik nie ma subskrypcji, twórz nową
-            $user->planSubscriptions()->create([
-                'plan_id' => 1, // ID planu premium w bazie danych
-                'starts_at' => now(),
-                'ends_at' => now()->addMonth(),
-            ]);
-        }
-    }
+    //     if ($existingSubscription) {
+    //         // Jeśli użytkownik ma aktywną subskrypcję, przedłuż ją o miesiąc
+    //         $existingSubscription->update([
+    //             'ends_at' => now()->addMonth()
+    //         ]);
+    //     } else {
+    //         // Jeśli użytkownik nie ma subskrypcji, twórz nową
+    //         $user->planSubscriptions()->create([
+    //             'plan_id' => 1, // ID planu premium w bazie danych
+    //             'starts_at' => now(),
+    //             'ends_at' => now()->addMonth(),
+    //         ]);
+    //     }
+    // }
+
+    // private function giveUserPremium(User $user)
+    // {
+    //     // Sprawdź, czy użytkownik nie ma już aktywnej subskrypcji
+    //     if ($user->hasPremium()) {
+    //         return;
+    //     }
+
+    //     // Dodaj subskrypcję na 30 dni
+    //     $user->newPlanSubscription('premium', 3) // 1 = ID planu premium
+    //         ->startsAt(now())
+    //         ->endsAt(now()->addMonth())
+    //         ->save();
+    // }
 
     public function __construct(Transfers24 $transfers24)
     {
@@ -172,6 +186,11 @@ class PaymentController extends APIController
         $payment->save();
 
         \Log::info('Payment status updated successfully', ['payment_id' => $payment->id, 'status' => $payment->status]);
+        // Pobierz użytkownika, który dokonał płatności
+        $user = $payment->user;
+        \Log::info('Payment usery', ['user' => $user]);
+
+        // $this->giveUserPremium($user);
 
         return response()->json(['message' => 'Payment status updated']);
     }
