@@ -55,6 +55,6 @@ Route::middleware(['auth', 'verified'])->group(function(){
 
 });
 
-Route::post('/payment/status', [PaymentController::class, 'status']);
+Route::post('payment/status', [PaymentController::class, 'status']);
 
 require __DIR__.'/auth.php';
