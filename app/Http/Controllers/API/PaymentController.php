@@ -20,6 +20,30 @@ class PaymentController extends APIController
 {
     private Transfers24 $transfers24;
 
+    private function giveUserPremium(User $user)
+    {
+        // Sprawdź, czy użytkownik już ma aktywną subskrypcję
+        $existingSubscription = $user->planSubscriptions()
+            ->whereNull('canceled_at')
+            ->where(function ($query) {
+                $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
+            })->first();
+
+        if ($existingSubscription) {
+            // Jeśli użytkownik ma aktywną subskrypcję, przedłuż ją o miesiąc
+            $existingSubscription->update([
+                'ends_at' => now()->addMonth()
+            ]);
+        } else {
+            // Jeśli użytkownik nie ma subskrypcji, twórz nową
+            $user->planSubscriptions()->create([
+                'plan_id' => 1, // ID planu premium w bazie danych
+                'starts_at' => now(),
+                'ends_at' => now()->addMonth(),
+            ]);
+        }
+    }
+
     public function __construct(Transfers24 $transfers24)
     {
         $this->transfers24 = $transfers24;
@@ -84,39 +108,31 @@ class PaymentController extends APIController
 
     public function status(Request $request)
     {
-        \Log::info('Webhook received', $request->all());
+        // Pobierz ID płatności z requestu (zakładam, że masz weryfikację Przelewy24)
+        $paymentId = $request->input('payment_id');
 
-        $response = $this->transfers24->receive($request);
-        \Log::info('Response from Transfers24', [
-            'session_id' => $response->getSessionId(),
-            'status' => $response->isSuccess()
-        ]);
+        // Znajdź płatność w bazie danych
+        $payment = Payment::where('transaction_id', $paymentId)->first();
 
-        $payment = Payment::where('session_id', $response->getSessionId())->first();
-
-        if (!$payment) {
-            \Log::error('Payment not found for session_id', ['session_id' => $response->getSessionId()]);
-            return response()->json(['error' => 'Payment not found'], 404);
+        // Sprawdź, czy płatność istnieje i jest już oznaczona jako SUKCES
+        if (!$payment || $payment->status === 'SUCCESS') {
+            return response()->json(['message' => 'Płatność już przetworzona'], 200);
         }
 
-        \Log::info('Payment found', ['payment_id' => $payment->id]);
+        // Zmień status płatności na sukces
+        $payment->update(['status' => 'SUCCESS']);
 
-        try {
-            \Log::info('Generating invoice before status change');
-            Invoice::generate($payment);
-            \Log::info('Invoice generated successfully');
-        } catch (\Exception $e) {
-            \Log::error('Error generating invoice', ['message' => $e->getMessage(), 'payment_id' => $payment->id]);
+        // Pobierz użytkownika, który dokonał płatności
+        $user = $payment->user; // Jeśli w `Payment` masz relację `user()`
+
+        if (!$user) {
+            return response()->json(['error' => 'Nie znaleziono użytkownika'], 404);
         }
 
-        // 🔴 Sprawdź, czy kod dochodzi do tego miejsca
-        \Log::info('Updating payment status', ['payment_id' => $payment->id]);
-        $payment->status = PaymentStatus::SUCCESS;
-        $payment->save();
+        // Aktywuj subskrypcję premium
+        $this->giveUserPremium($user);
 
-        \Log::info('Payment status updated successfully', ['payment_id' => $payment->id, 'status' => $payment->status]);
-
-        return response()->json(['message' => 'Payment status updated']);
+        return response()->json(['message' => 'Płatność zaakceptowana, subskrypcja aktywowana']);
     }
 
     /**
