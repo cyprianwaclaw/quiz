@@ -139,7 +139,8 @@ class UserPlanController extends APIController
         $plan = Plan::findOrFail(2);
         if ($plan->price > 0) {
             $planSubscription = $user->newPlanSubscription('main', $plan);
-            $planSubscription->ends_at = Carbon::now()->addDays($days);
+            $planSubscription->ends_at = Carbon::now()->addMonth(); // Dodanie miesiąca
+            // $planSubscription->ends_at = Carbon::now()->addDays($days);
             $planSubscription->save();
 
             return $this->sendResponse('Premium ważne do: ' . Carbon::now()->addDays($days));
