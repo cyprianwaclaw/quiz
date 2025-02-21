@@ -106,34 +106,34 @@ class PaymentController extends APIController
      * Trying change payment status to SUCCESS,
      */
 
-    public function status(Request $request)
-    {
-        // Pobierz ID płatności z requestu (zakładam, że masz weryfikację Przelewy24)
-        $paymentId = $request->input('payment_id');
+public function status(Request $request)
+{
+    // Pobierz ID płatności z requestu (zakładam, że masz weryfikację Przelewy24)
+    $paymentId = $request->input('payment_id');
 
-        // Znajdź płatność w bazie danych
-        $payment = Payment::where('transaction_id', $paymentId)->first();
+    // Znajdź płatność w bazie danych
+    $payment = Payment::where('transaction_id', $paymentId)->first();
 
-        // Sprawdź, czy płatność istnieje i jest już oznaczona jako SUKCES
-        if (!$payment || $payment->status === 'SUCCESS') {
-            return response()->json(['message' => 'Płatność już przetworzona'], 200);
-        }
-
-        // Zmień status płatności na sukces
-        $payment->update(['status' => 'SUCCESS']);
-
-        // Pobierz użytkownika, który dokonał płatności
-        $user = $payment->user; // Jeśli w `Payment` masz relację `user()`
-
-        if (!$user) {
-            return response()->json(['error' => 'Nie znaleziono użytkownika'], 404);
-        }
-
-        // Aktywuj subskrypcję premium
-        $this->giveUserPremium($user);
-
-        return response()->json(['message' => 'Płatność zaakceptowana, subskrypcja aktywowana']);
+    // Sprawdź, czy płatność istnieje i jest już oznaczona jako SUKCES
+    if (!$payment || $payment->status === 'SUCCESS') {
+        return response()->json(['message' => 'Płatność już przetworzona'], 200);
     }
+
+    // Zmień status płatności na sukces
+    $payment->update(['status' => 'SUCCESS']);
+
+    // Pobierz użytkownika, który dokonał płatności
+    $user = $payment->user; // Jeśli w `Payment` masz relację `user()`
+
+    if (!$user) {
+        return response()->json(['error' => 'Nie znaleziono użytkownika'], 404);
+    }
+
+    // Aktywuj subskrypcję premium
+    $this->giveUserPremium($user);
+
+    return response()->json(['message' => 'Płatność zaakceptowana, subskrypcja aktywowana']);
+}
 
     /**
      * Download invoice by payment ID
