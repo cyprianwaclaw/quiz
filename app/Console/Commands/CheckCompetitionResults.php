@@ -19,16 +19,30 @@ class CheckCompetitionResults extends Command
         parent::__construct();
     }
 
+    // public function handle()
+    // {
+    //     $competitions = Competition::where('time_end', '=', Carbon::now())->get();
+
+    //     foreach ($competitions as $competition) {
+    //         // Sprawdź wyniki konkursu
+    //         $this->checkCompetitionResults($competition);
+    //     }
+    // }
+    
     public function handle()
     {
+        Log::info('🔄 Komenda competition:check-results została uruchomiona.');
+
         $competitions = Competition::where('time_end', '=', Carbon::now())->get();
 
+        if ($competitions->isEmpty()) {
+            Log::info('ℹ️ Brak konkursów do sprawdzenia.');
+        }
+
         foreach ($competitions as $competition) {
-            // Sprawdź wyniki konkursu
             $this->checkCompetitionResults($competition);
         }
     }
-
     protected function checkCompetitionResults(Competition $competition)
     {
         $competitionSubmissions = CompetitionSubmission::where('competition_id', $competition->id)
