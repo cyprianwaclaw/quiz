@@ -22,47 +22,47 @@ class UserPlanController extends Controller
     }
 
 
-//     public function buyPlan1(Request $request)
-//     {
-//         $plan = Plan::find($request->input('plan'));
-//         $subscription = auth()->user()->newPlanSubscription('main', $plan);
-//         $subscription->cancel(true);
-
-//         return $this->paymentTransaction($subscription, $plan);
-// //
-// //        return redirect(route('dashboard'));
-//     }
-
-    public function buyPlan2(Request $request)
+    public function buyPlan1(Request $request)
     {
-        $plan = Plan::findOrFail($request->input('plan'));
+        $plan = Plan::find($request->input('plan'));
+        $subscription = auth()->user()->newPlanSubscription('main', $plan);
+        $subscription->cancel(true);
 
-        // Tworzymy rekord płatności, ale jeszcze nie przypisujemy planu
-        $payment = new Payment();
-        $payment->user_id = auth()->id();
-        $payment->plan_id = $plan->id;
-        $payment->status = PaymentStatus::IN_PROGRESS;
-        $payment->save();
-
-        return $this->paymentTransaction($payment, $plan);
+        return $this->paymentTransaction($subscription, $plan);
+//
+//        return redirect(route('dashboard'));
     }
 
-    public function buyPlan(Request $request)
-    {
-        $plan = Plan::findOrFail($request->input('plan'));
+    // public function buyPlan2(Request $request)
+    // {
+    //     $plan = Plan::findOrFail($request->input('plan'));
 
-        // Tworzymy rekord płatności, ale jeszcze nie przypisujemy planu
-        $payment = new Payment();
-        $payment->user_id = auth()->id();
-        $payment->plan_id = $plan->id;
-        $payment->status = PaymentStatus::IN_PROGRESS;
-        $payment->save();
+    //     // Tworzymy rekord płatności, ale jeszcze nie przypisujemy planu
+    //     $payment = new Payment();
+    //     $payment->user_id = auth()->id();
+    //     $payment->plan_id = $plan->id;
+    //     $payment->status = PaymentStatus::IN_PROGRESS;
+    //     $payment->save();
 
-        return response()->json([
-            'payment_url' => $this->paymentTransaction($payment, $plan)
-        ]);
-    }
-    
+    //     return $this->paymentTransaction($payment, $plan);
+    // }
+
+    // public function buyPlan(Request $request)
+    // {
+    //     $plan = Plan::findOrFail($request->input('plan'));
+
+    //     // Tworzymy rekord płatności, ale jeszcze nie przypisujemy planu
+    //     $payment = new Payment();
+    //     $payment->user_id = auth()->id();
+    //     $payment->plan_id = $plan->id;
+    //     $payment->status = PaymentStatus::IN_PROGRESS;
+    //     $payment->save();
+
+    //     return response()->json([
+    //         'payment_url' => $this->paymentTransaction($payment, $plan)
+    //     ]);
+    // }
+
     public function setUserPlan($user, $plan)
     {
 

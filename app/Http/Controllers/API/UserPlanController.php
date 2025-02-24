@@ -36,24 +36,38 @@ class UserPlanController extends APIController
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function buyPlan(Request $request): \Illuminate\Http\JsonResponse
+    // public function buyPlan(Request $request): \Illuminate\Http\JsonResponse
+    // {
+    //     $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
+    //     $plan = Plan::findOrFail($request->input('plan'));
+    //     if ($plan->price > 0) {
+    //         $planSubscription = auth()->user()->newPlanSubscription('main', $plan);
+
+    //         // $planSubscription->ends_at = now();
+    //         // $planSubscription->save();
+    //         // // return $this->$planSubscription;
+    //         // Log::error('Błąd transakcji', ['error' =>   "payment"]);
+
+    //         return $this->paymentTransaction($planSubscription, $plan);
+    //     } else {
+    //         return $this->sendError('Ten plan jest niedostępny');
+    //     }
+    // }
+
+      public function buyPlan(Request $request)
     {
-        $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
         $plan = Plan::findOrFail($request->input('plan'));
-        if ($plan->price > 0) {
-            $planSubscription = auth()->user()->newPlanSubscription('main', $plan);
 
-            // $planSubscription->ends_at = now();
-            // $planSubscription->save();
-            // // return $this->$planSubscription;
-            // Log::error('Błąd transakcji', ['error' =>   "payment"]);
+        // Tworzymy rekord płatności, ale jeszcze nie przypisujemy planu
+        $payment = new Payment();
+        $payment->user_id = auth()->id();
+        $payment->plan_id = $plan->id;
+        $payment->status = PaymentStatus::IN_PROGRESS;
+        $payment->save();
 
-            return $this->paymentTransaction($planSubscription, $plan);
-        } else {
-            return $this->sendError('Ten plan jest niedostępny');
-        }
+        return $this->paymentTransaction($payment, $plan);
     }
-
+    
     public function setUserPlan($user, $plan)
     {
     }
