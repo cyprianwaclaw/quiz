@@ -111,6 +111,7 @@ class UserPlanController extends APIController
         $payment = new Payment();
         $payment->plan_subscription_id = $planSubscription->id;
         // $payment->plan_subscription_id = $planSubscription;
+        Log::error('$payment', ['error' => $payment]);
 
         try {
             $response = $this->transfers24
