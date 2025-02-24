@@ -106,58 +106,22 @@ class UserPlanController extends APIController
         return response()->json((bool)$user->activePlanSubscriptions()->pluck('name')->count());
     }
 
-    // private function paymentTransaction(PlanSubscription $planSubscription, Plan $plan)
-    // {
-    //     $payment = new Payment();
-    //     // $payment->plan_subscription_id = $planSubscription->id;
-    //     $payment->plan_subscription_id = $planSubscription;
-
-    //     try {
-    //         $response = $this->transfers24
-    //             ->setEmail(\Auth::user()->email)
-    //             ->setAmount($planSubscription->plan->price)
-    //             ->init();
-    //         if ($response->isSuccess()) {
-    //             $payment->status = PaymentStatus::IN_PROGRESS;
-    //             $payment->session_id = $response->getSessionId();
-    //             $payment->save();
-    //             // save registration parameters in payment object
-    //             return $this->sendResponse($this->transfers24->execute($response->getToken()));
-    //         } else {
-    //             $payment->status = PaymentStatus::FAIL;
-    //             $payment->error_code = $response->getErrorCode();
-    //             $payment->error_description = json_encode($response->getErrorDescription());
-    //             $payment->save();
-    //             return $this->sendError('Błąd__');
-    //             Log::error('Błąd transakcji', ['error' =>   $payment]);
-
-    //         }
-    //     } catch (RequestException | RequestExecutionException $e) {
-    //         Log::error('Błąd transakcji', ['error' => $e]);
-    //         return $this->sendError('Błąd transakcji');
-    //     }
-    // }
-
     private function paymentTransaction(PlanSubscription $planSubscription, Plan $plan)
     {
         $payment = new Payment();
-        $payment->plan_subscription_id = $planSubscription->id;  // Użyj ID subskrypcji
+        $payment->plan_subscription_id = $planSubscription->id;
+        // $payment->plan_subscription_id = $planSubscription;
 
         try {
             $response = $this->transfers24
-            ->setEmail(\Auth::user()->email)
-            ->setAmount($planSubscription->plan->price)
-            ->init();
-
+                ->setEmail(\Auth::user()->email)
+                ->setAmount($planSubscription->plan->price)
+                ->init();
             if ($response->isSuccess()) {
-                // Płatność zakończona sukcesem, przydziel plan premium
-                $payment->status = PaymentStatus::SUCCESS;
+                $payment->status = PaymentStatus::IN_PROGRESS;
                 $payment->session_id = $response->getSessionId();
                 $payment->save();
-
-                // Przydziel plan premium
-                $this->setUserPlan(auth()->user(), $plan);
-
+                // save registration parameters in payment object
                 return $this->sendResponse($this->transfers24->execute($response->getToken()));
             } else {
                 $payment->status = PaymentStatus::FAIL;
@@ -166,12 +130,48 @@ class UserPlanController extends APIController
                 $payment->save();
                 return $this->sendError('Błąd__');
                 Log::error('Błąd transakcji', ['error' =>   $payment]);
+
             }
         } catch (RequestException | RequestExecutionException $e) {
             Log::error('Błąd transakcji', ['error' => $e]);
             return $this->sendError('Błąd transakcji');
         }
     }
+
+    // private function paymentTransaction(PlanSubscription $planSubscription, Plan $plan)
+    // {
+    //     $payment = new Payment();
+    //     $payment->plan_subscription_id = $planSubscription->id;  // Użyj ID subskrypcji
+
+    //     try {
+    //         $response = $this->transfers24
+    //         ->setEmail(\Auth::user()->email)
+    //         ->setAmount($planSubscription->plan->price)
+    //         ->init();
+
+    //         if ($response->isSuccess()) {
+    //             // Płatność zakończona sukcesem, przydziel plan premium
+    //             $payment->status = PaymentStatus::SUCCESS;
+    //             $payment->session_id = $response->getSessionId();
+    //             $payment->save();
+
+    //             // Przydziel plan premium
+    //             $this->setUserPlan(auth()->user(), $plan);
+
+    //             return $this->sendResponse($this->transfers24->execute($response->getToken()));
+    //         } else {
+    //             $payment->status = PaymentStatus::FAIL;
+    //             $payment->error_code = $response->getErrorCode();
+    //             $payment->error_description = json_encode($response->getErrorDescription());
+    //             $payment->save();
+    //             return $this->sendError('Błąd__');
+    //             Log::error('Błąd transakcji', ['error' =>   $payment]);
+    //         }
+    //     } catch (RequestException | RequestExecutionException $e) {
+    //         Log::error('Błąd transakcji', ['error' => $e]);
+    //         return $this->sendError('Błąd transakcji');
+    //     }
+    // }
 
     public function givePremium(Request $request)
     {
