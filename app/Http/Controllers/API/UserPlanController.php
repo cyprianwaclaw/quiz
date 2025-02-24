@@ -109,7 +109,8 @@ class UserPlanController extends APIController
     private function paymentTransaction(PlanSubscription $planSubscription, Plan $plan)
     {
         $payment = new Payment();
-        $payment->plan_subscription_id = $planSubscription->id;
+        // $payment->plan_subscription_id = $planSubscription->id;
+        $payment->plan_subscription_id = 3;
         // $payment->plan_subscription_id = $planSubscription;
         Log::error('$payment', ['error' => $payment]);
 
