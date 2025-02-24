@@ -28,21 +28,42 @@ class CheckCompetitionResults extends Command
     //         $this->checkCompetitionResults($competition);
     //     }
     // }
-    
+
+    // public function handle()
+    // {
+    //     Log::info('🔄 Komenda competition:check-results została uruchomiona.');
+
+    //     $competitions = Competition::where('time_end', '=', Carbon::now())->get();
+
+    //     if ($competitions->isEmpty()) {
+    //         Log::info('ℹ️ Brak konkursów do sprawdzenia.');
+    //     }
+
+    //     foreach ($competitions as $competition) {
+    //         $this->checkCompetitionResults($competition);
+    //     }
+    // }
+
     public function handle()
     {
         Log::info('🔄 Komenda competition:check-results została uruchomiona.');
 
-        $competitions = Competition::where('time_end', '=', Carbon::now())->get();
+        // Zmiana zapytania, uwzględniając konkursy, które kończą się "w tej minucie"
+        $competitions = Competition::where('time_end', '<=', Carbon::now()->addMinute())
+            ->where('time_end', '>=', Carbon::now())
+            ->get();
 
         if ($competitions->isEmpty()) {
             Log::info('ℹ️ Brak konkursów do sprawdzenia.');
+            return;
         }
 
         foreach ($competitions as $competition) {
+            Log::info("🔍 Sprawdzanie konkursu ID: {$competition->id}");
             $this->checkCompetitionResults($competition);
         }
     }
+    
     protected function checkCompetitionResults(Competition $competition)
     {
         $competitionSubmissions = CompetitionSubmission::where('competition_id', $competition->id)
