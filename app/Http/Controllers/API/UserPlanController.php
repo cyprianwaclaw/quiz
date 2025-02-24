@@ -62,26 +62,18 @@ class UserPlanController extends APIController
         $plan = Plan::findOrFail($request->input('plan'));
 
         if ($plan->price > 0) {
-            // Możesz spróbować znaleźć istniejącą subskrypcję
-            $planSubscription = auth()->user()->planSubscription('main'); // 'main' - nazwa subskrypcji
-
-            // Jeśli subskrypcja istnieje, kontynuuj
-            if ($planSubscription) {
-                return $this->paymentTransaction($planSubscription, $plan);
-            }
-
-            // Jeśli nie ma subskrypcji, zapisz tylko płatność (nie twórz nowej subskrypcji)
-            return $this->paymentTransactionForExistingPlan($plan);
+            // Przekazujemy tylko ID planu do metody płatności
+            return $this->paymentTransaction($plan->id, $plan);
         } else {
             return $this->sendError('Ten plan jest niedostępny');
         }
     }
 
-    private function paymentTransactionForExistingPlan(Plan $plan)
+    private function paymentTransaction(int $planId, Plan $plan)
     {
         $payment = new Payment();
         $payment->user_id = auth()->id();
-        $payment->plan_id = $plan->id;
+        $payment->plan_id = $planId;  // Przechowujemy tylko ID planu
         $payment->status = PaymentStatus::IN_PROGRESS;
         $payment->save();
 
