@@ -17,6 +17,6 @@ class UserSubscriptionsSeeder extends Seeder
     {
         $user = User::findOrFail(1);
         $plan = Plan::findOrFail(3);
-        $user->newPlanSubscription('main', $plan);
+        $user->newPlanSubscription('maSASASASin', $plan);
     }
 }

@@ -20,7 +20,7 @@ class UserPlanController extends Controller
     {
         $this->transfers24 = $transfers24;
     }
-
+    
 
     public function buyPlan(Request $request)
     {
