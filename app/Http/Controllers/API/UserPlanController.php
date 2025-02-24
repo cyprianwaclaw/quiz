@@ -41,7 +41,9 @@ class UserPlanController extends APIController
         $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
         $plan = Plan::findOrFail($request->input('plan'));
         if ($plan->price > 0) {
-            $planSubscription = auth()->user()->newPlanSubscription('mertrtretain', $plan);
+            // $planSubscription = auth()->user()->newPlanSubscription('mertrtretain', $plan);
+
+            $planSubscription = 3;
 
             // $planSubscription->ends_at = now();
             // $planSubscription->save();
@@ -119,7 +121,9 @@ class UserPlanController extends APIController
     private function paymentTransaction(PlanSubscription $planSubscription, Plan $plan)
     {
         $payment = new Payment();
-        $payment->plan_subscription_id = $planSubscription->id;
+        // $payment->plan_subscription_id = $planSubscription->id;
+        $payment->plan_subscription_id = $planSubscription;
+
         try {
             $response = $this->transfers24
                 ->setEmail(\Auth::user()->email)
