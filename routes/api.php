@@ -59,6 +59,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('all', [QuizController::class, 'getAllS']);
     });
 
+    // sendChangePasswordCode
+    Route::post('/send-new-code-change-email', [AuthController::class, 'sendChangeEmailCode']);
+
+
     Route::apiResource('quizzes', QuizController::class, ["as" => "api"]);
     Route::get('quizzes/{id}/data', [QuizController::class, 'getQuestionsAndAnswers']);
     Route::apiResource('categories', CategoryController::class, ["as" => "api"]);
@@ -83,8 +87,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('user/getPlan', [UserPlanController::class, 'getUserPlan']);
     Route::get('user/hasPremium', [UserPlanController::class, 'userHasPremium']);
     Route::post('/change-password', [AuthController::class, 'resetPassword']);
+    Route::post('/change-email', [AuthController::class, 'changeEmail']);
 
-    
+
+
     Route::prefix('quiz')->group(function () {
         Route::get('{quiz}', [QuizController::class, 'show']);
         Route::get('edit/{quiz}', [QuizController::class, 'edit']);

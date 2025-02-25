@@ -176,6 +176,7 @@ class AuthController extends APIController
 
     public function sendNewCode(Request $request)
     {
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
@@ -184,6 +185,7 @@ class AuthController extends APIController
                 'message' => 'Użytkownik nie istnieje'
             ], 404);
         }
+
 
         $newVerificationCode = Str::random(6);
         $user->verification_code = $newVerificationCode;
@@ -194,6 +196,34 @@ class AuthController extends APIController
         Mail::to($user->email)->send(new VerificationMail($user, $request->page_name));
 
         return response()->json([
+            'success' => true,
+            'message' => 'Nowy kod weryfikacyjny został wysłany na Twój e-mail'
+        ], 200);
+    }
+
+    public function sendChangeEmailCode(Request $request)
+    {
+        // Walidacja czy email już istnieje w bazie
+        $existingUser = User::where('email', $request->email)->first();
+        if ($existingUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ten e-mail jest już zajęty'
+            ], 422);
+        }
+
+        $user = Auth::user();
+
+        $newVerificationCode = Str::random(6);
+        $user->verification_code = $newVerificationCode;
+        $user->save();
+
+        // Wysyłka e-maila z kodem do usera
+        Mail::to($request->email)->send(new VerificationMail($user, $request->page_name));
+
+        return response()->json([
+            'e-mail' => $request->email,
+            "code" => $newVerificationCode,
             'success' => true,
             'message' => 'Nowy kod weryfikacyjny został wysłany na Twój e-mail'
         ], 200);
@@ -291,6 +321,33 @@ class AuthController extends APIController
         return response()->json([
             'success' => true,
             'message' => 'Hasło zostało zmienione pomyślnie',
+        ]);
+    }
+
+    public function changeEmail(Request $request)
+    {
+        $request->validate([
+            'new_email' => 'required|email',
+            'confirm_email' => 'required|email|same:new_email',
+            'code' => 'required|string',
+        ]);
+
+        $user = Auth::user(); // Pobiera aktualnie zalogowanego użytkownika
+
+        if (!$user || $user->verification_code !== $request->code) {
+            return response()->json([
+                'success' => false,
+                'messageError' => 'Błędny kod weryfikacyjny'
+            ], 400);
+        }
+
+        $user->email = $request->new_email;
+        $user->verification_code = null; // Czyszczenie kodu po poprawnej zmianie e-maila
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Adres e-mail został zmieniony pomyślnie',
         ]);
     }
 }
