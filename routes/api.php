@@ -36,8 +36,10 @@ Route::post('register', [AuthController::class, 'registerUser']); //nowe
 Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::post('/send-new-code', [AuthController::class, 'sendNewCode']);
 
-Route::post('/reset-password-code', [AuthController::class, 'sendResetPasswordCode']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/forgot-password-code', [AuthController::class, 'sendResetPasswordCode']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+// Route::post('/change-password', [AuthController::class, 'resetPassword']);
+
 
 Route::post('login', [AuthController::class , 'login']);
 Route::get('competitionFinished/{competition}/bestAnswers', [CompetitionSubmissionController::class, 'bestAnswers']);
@@ -80,7 +82,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Route::get('user/competitions', [CompetitionController::class, 'userCompetitions']);
     Route::get('user/getPlan', [UserPlanController::class, 'getUserPlan']);
     Route::get('user/hasPremium', [UserPlanController::class, 'userHasPremium']);
+    Route::post('/change-password', [AuthController::class, 'resetPassword']);
 
+    
     Route::prefix('quiz')->group(function () {
         Route::get('{quiz}', [QuizController::class, 'show']);
         Route::get('edit/{quiz}', [QuizController::class, 'edit']);

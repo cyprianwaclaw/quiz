@@ -40,6 +40,7 @@ class AuthController extends APIController
         $verificationCode = Str::random(6);
         $user = User::create([
             'name' => $request->name,
+            'surname' => $request->surname,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'verification_code' => $verificationCode,
@@ -236,7 +237,7 @@ class AuthController extends APIController
     }
 
 
-    public function resetPassword(Request $request)
+    public function forgotPassword(Request $request)
     {
         $request->validate([
             'email' => 'required|email|exists:users,email',
@@ -264,6 +265,32 @@ class AuthController extends APIController
             'success' => true,
             'message' => 'Hasło zostało zmienione pomyślnie',
             'isVerified' => $user->email_verified,
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{6,}$/',
+            'confirm_password' => 'required|string|same:password',
+        ]);
+
+        $user = Auth::user();
+
+        if (!$user || !Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'messageError' => 'Błędne hasło'
+            ], 400);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Hasło zostało zmienione pomyślnie',
         ]);
     }
 }
