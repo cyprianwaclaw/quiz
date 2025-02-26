@@ -41,13 +41,13 @@ class PayoutStatus
 
     const TYPES_WITH_TEXT = [
         self::IN_PROGRESS => 'W oczekiwaniu na przelew',
-        self::SUCCESS => 'Zrealizowano pomyślnie',
+        self::SUCCESS => 'Zrealizowano',
         self::FAIL => 'Błąd wypłaty',
     ];
 
     const TYPES_WITH_TEXT_PAYMENTS = [
         self::IN_PROGRESS => 'Oczekująca',
-        self::SUCCESS => 'Zrealizowano pomyślnie',
+        self::SUCCESS => 'Zrealizowano',
         self::FAIL => 'Błąd płatności',
     ];
 
