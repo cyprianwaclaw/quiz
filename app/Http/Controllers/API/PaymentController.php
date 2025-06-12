@@ -287,7 +287,7 @@ class PaymentController extends APIController
             ->whereHas('planSubscription', function ($query) use ($user) {
                 $query->where('subscriber_id', $user->id)->whereNull('deleted_at');
             })
-            ->orderBy('payments.created_at', 'desc')
+            ->orderBy('payments.created_at', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Konwersja kolekcji na zmodyfikowane dane przed przypisaniem do paginacji
