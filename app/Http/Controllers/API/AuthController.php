@@ -101,7 +101,7 @@ class AuthController extends APIController
      *
      */
 
-    public function getCurrentUser(Request $request)
+    public function getCurrentUser1(Request $request)
     {
         $user = User::findOrFail(auth()->user()->id);
         $stats = $user->stats;
@@ -120,6 +120,45 @@ class AuthController extends APIController
             'points' => $user->points,
             'avatar' => $user->avatar_path ? $user->avatar_path : false,
             'plan' => $user->hasPremium() ? 'Premium' : 'Standard'
+        ]);
+    }
+
+    public function getCurrentUser(Request $request)
+    {
+        $user = User::findOrFail(auth()->user()->id);
+        $stats = $user->stats;
+        $invited = User::where('invited_by', $user->id)->count();
+
+        $isPremium = $user->hasPremium();
+        $premiumEndsAt = null;
+
+        if ($isPremium) {
+            $subscription = $user->subscriptions()
+                ->where('name', 'premium')
+                ->whereNull('canceled_at')
+                ->orderByDesc('ends_at')
+                ->first();
+
+            if ($subscription) {
+                $premiumEndsAt = $subscription->ends_at;
+            }
+        }
+
+        return response([
+            'user_name' => $user->name,
+            'user_surname' => $user->surname,
+            'user_email' => $user->email,
+            'user_phone' => $user->phone,
+
+            'answers' => [
+                'correct' => $stats->correct_answers,
+                'incorrect' => $stats->incorrect_answers,
+                'all' => $stats->correct_answers + $stats->incorrect_answers,
+            ],
+            'points' => $user->points,
+            'avatar' => $user->avatar_path ?: false,
+            'plan' => $isPremium ? 'Premium' : 'Standard',
+            'premium_expires_at' => $premiumEndsAt,
         ]);
     }
 
