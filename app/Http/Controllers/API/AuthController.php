@@ -101,7 +101,7 @@ class AuthController extends APIController
      *
      */
 
-    public function getCurrentUser1(Request $request)
+    public function getCurrentUser(Request $request)
     {
         $user = User::findOrFail(auth()->user()->id);
         $stats = $user->stats;
@@ -123,7 +123,7 @@ class AuthController extends APIController
         ]);
     }
 
-    public function getCurrentUser(Request $request)
+    public function getCurrentUser1(Request $request)
     {
         $user = User::findOrFail(auth()->user()->id);
         $stats = $user->stats;
