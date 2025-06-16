@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use function event;
 use Illuminate\Support\Facades\Log;
 use App\Enums\PayoutStatus;
+use Rinvex\Subscriptions\Models\Plan;
 
 class PaymentController extends APIController
 {
