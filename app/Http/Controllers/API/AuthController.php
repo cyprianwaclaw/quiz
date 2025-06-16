@@ -158,7 +158,7 @@ class AuthController extends APIController
             'points' => $user->points,
             'avatar' => $user->avatar_path ?: false,
             'plan' => $isPremium ? 'Premium' : 'Standard',
-            'premium_expires_at' => $premiumEndsAt,
+            'premium_end' => $premiumEndsAt,
         ]);
     }
 
