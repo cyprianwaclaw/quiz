@@ -153,7 +153,45 @@ class PaymentController extends APIController
      * Trying change payment status to SUCCESS,
      */
 
+
     public function status(Request $request)
+    {
+        Log::info('Webhook received', $request->all());
+
+        $response = $this->transfers24->receive($request);
+        $sessionId = $response->getSessionId();
+
+        $payment = Payment::where('session_id', $sessionId)->first();
+
+        if (!$payment) {
+            Log::error('Payment not found', ['session_id' => $sessionId]);
+            return response()->json(['error' => 'Payment not found'], 404);
+        }
+
+        // Unikamy wielokrotnego przetwarzania
+        if ($payment->status === PaymentStatus::SUCCESS) {
+            return response()->json(['message' => 'Payment already processed']);
+        }
+
+        $payment->status = PaymentStatus::SUCCESS;
+        $payment->save();
+
+        $user = $payment->user;
+        $plan = $payment->plan;
+
+        $subscription = $user
+            ->newPlanSubscription('premium', $plan)
+            ->create([
+                'starts_at' => now(),
+                'ends_at' => now()->addMonth(),
+            ]);
+
+        Log::info('Subscription created', ['subscription_id' => $subscription->id]);
+
+        return response()->json(['message' => 'Plan activated']);
+    }
+
+    public function status1(Request $request)
     {
         \Log::info('Webhook received', $request->all());
 
