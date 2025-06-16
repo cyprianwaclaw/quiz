@@ -36,14 +36,84 @@ class UserPlanController extends APIController
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function buyPlan(Request $request): \Illuminate\Http\JsonResponse
+
+
+    public function buyPlan(Request $request)
+    {
+        $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
+        $plan = Plan::findOrFail($validated['plan']);
+
+        if ($plan->price <= 0) {
+            return $this->sendError('Ten plan jest niedostępny');
+        }
+
+        $payment = new Payment();
+        $payment->user_id = auth()->id(); // jeśli masz
+        $payment->plan_id = $plan->id;
+        $payment->status = PaymentStatus::IN_PROGRESS;
+
+        try {
+            $response = $this->transfers24
+                ->setEmail(auth()->user()->email)
+                ->setAmount($plan->price)
+                ->init();
+
+            if ($response->isSuccess()) {
+                $payment->session_id = $response->getSessionId();
+                $payment->save();
+
+                return $this->sendResponse($this->transfers24->execute($response->getToken()));
+            } else {
+                $payment->status = PaymentStatus::FAIL;
+                $payment->error_code = $response->getErrorCode();
+                $payment->error_description = json_encode($response->getErrorDescription());
+                $payment->save();
+
+                return $this->sendError('Błąd płatności');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Błąd transakcji', ['error' => $e]);
+            return $this->sendError('Błąd transakcji');
+        }
+    }
+
+
+    public function paymentSuccess(Request $request)
+    {
+        $sessionId = $request->get('session_id');
+
+        $payment = Payment::where('session_id', $sessionId)->first();
+
+        if (!$payment || $payment->status === PaymentStatus::SUCCESS) {
+            return response()->json(['message' => 'Already processed or not found'], 200);
+        }
+
+        $payment->status = PaymentStatus::SUCCESS;
+        $payment->save();
+
+        $user = $payment->user;
+        $plan = $payment->plan;
+
+        $subscription = $user
+            ->newPlanSubscription('premium', $plan)
+            ->create([
+                'starts_at' => now(),
+                'ends_at' => now()->addMonth(),
+            ]);
+
+        return response()->json(['message' => 'Plan activated'], 200);
+    }
+
+    public function buyPlanOld(Request $request)
     {
         $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
         $plan = Plan::findOrFail($request->input('plan'));
         if ($plan->price > 0) {
             $planSubscription = auth()->user()->newPlanSubscription('mertrtretain', $plan);
-
-            // $planSubscription = 3;
+            // $planSubscription = auth()->user()
+            // ->newPlanSubscription('mertrtretain', $plan)
+            // ->create();
+            $planSubscription = 3;
 
             // $planSubscription->ends_at = now();
             // $planSubscription->save();

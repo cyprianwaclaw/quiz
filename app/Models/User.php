@@ -168,10 +168,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Payout::class);
     }
 
-    public function payments()
+    public function planSubscriptions()
     {
-        return $this->hasManyThrough(Payment::class,PlanSubscription::class, 'subscriber_id');
+        return $this->morphMany(PlanSubscription::class, 'subscriber');
     }
 
+    public function payments()
+    {
+        return $this->hasManyThrough(
+            Payment::class,
+            PlanSubscription::class,
+            'subscriber_id', // to nie zadziała, bo masz morphs!
+            'plan_subscription_id',
+            'id',
+            'id'
+        );
+    }
 
 }

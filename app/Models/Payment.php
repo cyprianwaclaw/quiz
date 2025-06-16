@@ -39,7 +39,7 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        "status",
+        "status",   
         'error_code',
         'error_description',
         'session_id',
