@@ -177,7 +177,14 @@ class PaymentController extends APIController
         $payment->save();
 
         $user = $payment->user;
-        $plan = $payment->plan;
+
+        // Wymuszony plan o ID = 3
+        $plan = Plan::find(3);
+
+        if (!$plan) {
+            Log::error('Plan ID 3 not found');
+            return response()->json(['error' => 'Plan not found'], 500);
+        }
 
         $subscription = $user
             ->newPlanSubscription('premium', $plan)
@@ -186,9 +193,13 @@ class PaymentController extends APIController
                 'ends_at' => now()->addMonth(),
             ]);
 
-        Log::info('Subscription created', ['subscription_id' => $subscription->id]);
+        Log::info('Subscription created', [
+            'subscription_id' => $subscription->id,
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+        ]);
 
-        return response()->json(['message' => 'Plan activated']);
+        return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
     }
 
     public function status1(Request $request)
