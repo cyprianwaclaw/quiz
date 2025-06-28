@@ -241,7 +241,7 @@ class CompetitionController extends Controller
     //     ], 200);
     // }
 
-    public function isCompetition(): \Illuminate\Http\JsonResponse
+    public function isCompetitions(): \Illuminate\Http\JsonResponse
     {
         $userId = auth()->id();
 
