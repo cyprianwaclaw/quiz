@@ -47,7 +47,10 @@ class UpdateUserSettingsRequest extends FormRequest
             'building_number' => ['required_with:company_name,nip,regon,city,postcode,street,house_number', 'string', 'max:5'],
             'house_number' => [],
 
-            'iban' => ['required_with:bank_name,swift', new Iban()],
+            'iban' => [
+                'required_with:bank_name,swift',
+                'regex:/^PL\d{26}$/'
+            ],
             'bank_name' => ['required_with:iban,swift', 'string'],
             'swift' => ['required_with:iban,bank_name', new Bic()],
         ];
