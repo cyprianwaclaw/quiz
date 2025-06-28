@@ -241,6 +241,17 @@ class CompetitionController extends Controller
     //     ], 200);
     // }
 
+    public function isCompetition(): \Illuminate\Http\JsonResponse
+    {
+        $userId = auth()->id();
+
+        $hasCompetitions = CompetitionSubmission::where('user_id', $userId)->exists();
+
+        return response()->json([
+            'has_competitions' => $hasCompetitions,
+        ]);
+    }
+
     public function userCompetitions(Request $request)
     {
         $perPage = intval($request->input('per_page', 14));

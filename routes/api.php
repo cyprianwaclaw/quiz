@@ -119,6 +119,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     Route::prefix('user')->group(function () {
         Route::get('competitions', [CompetitionController::class, 'userCompetitions']);
+        Route::get('isCompetitions', [CompetitionController::class, 'isCompetitions']);
         Route::get('getInvitedUsers', [UserController::class, 'getInvitedUsers']);
         Route::get('stats', [UserStatsController::class, 'show']);
         Route::get('settings', [UserSettingsController::class, 'show']);
