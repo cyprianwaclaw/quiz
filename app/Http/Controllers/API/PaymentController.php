@@ -464,11 +464,7 @@ class PaymentController extends APIController
 
         // Pobranie płatności
         // $payments = Payment::where("subscriber_id", $user->id)
-        $payments = Payment::whereHas('planSubscription', function ($query) use ($user) {
-            $query->where('subscriber_id', $user->id)
-            ->where('subscriber_type', get_class($user))
-                ->whereNull('deleted_at');
-        })->paginate($perPage, ['*'], 'page', $page);
+        $payments = Payment::paginate($perPage, ['*'], 'page', $page);
             // ->select(
             //     'payments.id as payment_id',
             //     'payments.status',
