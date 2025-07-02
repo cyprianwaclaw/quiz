@@ -96,7 +96,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(UserStats::class);
     }
 
- // testowanie domslnie przypisanie statystyk
+    // testowanie domslnie przypisanie statystyk
     protected static function booted()
     {
         // parent::boote();
@@ -138,7 +138,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function answeredByCategory(Category $category)
     {
         return $this
-            ->belongsToMany(Question::class,AnswerUser::class)
+            ->belongsToMany(Question::class, AnswerUser::class)
             ->whereRelation('category', 'category_id', '=', $category->id);
     }
 
@@ -153,7 +153,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function unansweredQuestions()
     {
         $id = $this->id;
-        return Question::whereDoesntHave('answers_user', function($q) use ($id) {
+        return Question::whereDoesntHave('answers_user', function ($q) use ($id) {
             $q->where('user_id', $id);
         });
     }
@@ -173,6 +173,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(PlanSubscription::class, 'subscriber_id');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'user_id');
+    }
 
     // public function planSubscriptions()
     // {
