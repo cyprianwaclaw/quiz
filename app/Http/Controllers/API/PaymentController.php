@@ -121,129 +121,160 @@ class PaymentController extends APIController
      * Trying change payment status to SUCCESS,
      */
 
-// public function status(Request $request)
-// {
-//     // Pobierz ID płatności z requestu (zakładam, że masz weryfikację Przelewy24)
-//     $paymentId = $request->input('payment_id');
+    // public function status(Request $request)
+    // {
+    //     // Pobierz ID płatności z requestu (zakładam, że masz weryfikację Przelewy24)
+    //     $paymentId = $request->input('payment_id');
 
-//     // Znajdź płatność w bazie danych
-//     $payment = Payment::where('transaction_id', $paymentId)->first();
+    //     // Znajdź płatność w bazie danych
+    //     $payment = Payment::where('transaction_id', $paymentId)->first();
 
-//     // Sprawdź, czy płatność istnieje i jest już oznaczona jako SUKCES
-//     if (!$payment || $payment->status === 'SUCCESS') {
-//         return response()->json(['message' => 'Płatność już przetworzona'], 200);
-//     }
+    //     // Sprawdź, czy płatność istnieje i jest już oznaczona jako SUKCES
+    //     if (!$payment || $payment->status === 'SUCCESS') {
+    //         return response()->json(['message' => 'Płatność już przetworzona'], 200);
+    //     }
 
-//     // Zmień status płatności na sukces
-//     $payment->update(['status' => 'SUCCESS']);
+    //     // Zmień status płatności na sukces
+    //     $payment->update(['status' => 'SUCCESS']);
 
-//     // Pobierz użytkownika, który dokonał płatności
-//     $user = $payment->user; // Jeśli w `Payment` masz relację `user()`
+    //     // Pobierz użytkownika, który dokonał płatności
+    //     $user = $payment->user; // Jeśli w `Payment` masz relację `user()`
 
-//     if (!$user) {
-//         return response()->json(['error' => 'Nie znaleziono użytkownika'], 404);
-//     }
+    //     if (!$user) {
+    //         return response()->json(['error' => 'Nie znaleziono użytkownika'], 404);
+    //     }
 
-//     // Aktywuj subskrypcję premium
-//     $this->giveUserPremium($user);
+    //     // Aktywuj subskrypcję premium
+    //     $this->giveUserPremium($user);
 
-//     return response()->json(['message' => 'Płatność zaakceptowana, subskrypcja aktywowana']);
-// }
+    //     return response()->json(['message' => 'Płatność zaakceptowana, subskrypcja aktywowana']);
+    // }
 
     /**
      * Trying change payment status to SUCCESS,
      */
 
-public function status(Request $request)
-{
-    Log::info('Webhook received - full request', $request->all());
+    public function status(Request $request)
+    {
+        Log::info('Webhook received - full request', $request->all());
 
-    try {
-        $response = $this->transfers24->receive($request);
-        $sessionId = $response->getSessionId();
+        try {
+            $response = $this->transfers24->receive($request);
+            $sessionId = $response->getSessionId();
 
-        $isSuccess = method_exists($response, 'isSuccess') ? $response->isSuccess() : false;
+            $isSuccess = method_exists($response, 'isSuccess') ? $response->isSuccess() : false;
 
-        Log::info('Parsed webhook response', [
-            'session_id' => $sessionId,
-            'is_success' => $isSuccess,
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Failed to parse webhook', ['error' => $e->getMessage()]);
-        return response()->json(['error' => 'Invalid webhook data'], 400);
-    }
+            Log::info('Parsed webhook response', [
+                'session_id' => $sessionId,
+                'is_success' => $isSuccess,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to parse webhook', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Invalid webhook data'], 400);
+        }
 
-    $payment = Payment::where('session_id', $sessionId)->first();
+        $payment = Payment::where('session_id', $sessionId)->first();
 
-    if (!$payment) {
-        Log::error('Payment not found', ['session_id' => $sessionId]);
-        return response()->json(['error' => 'Payment not found'], 404);
-    }
+        if (!$payment) {
+            Log::error('Payment not found', ['session_id' => $sessionId]);
+            return response()->json(['error' => 'Payment not found'], 404);
+        }
 
-    Log::info('Payment found', [
-        'payment_id' => $payment->id,
-        'status' => $payment->status,
-        'amount' => $payment->amount ?? null,
-        'user_id' => $payment->user_id ?? null,
-    ]);
-
-    if (!$isSuccess) {
-        Log::warning('Payment not successful', ['payment_id' => $payment->id]);
-        return response()->json(['error' => 'Payment not successful']);
-    }
-
-    if ($payment->status === PaymentStatus::SUCCESS) {
-        return response()->json(['message' => 'Payment already processed']);
-    }
-
-    // Generowanie faktury - logujemy dane wejściowe i wyjściowe
-    try {
-        Log::info('Generating invoice for payment', [
+        Log::info('Payment found', [
             'payment_id' => $payment->id,
-            'user_id' => $payment->user_id,
-            'amount' => $payment->amount,
-            'created_at' => $payment->created_at,
+            'status' => $payment->status,
+            'amount' => $payment->amount ?? null,
+            'user_id' => $payment->user_id ?? null,
         ]);
-        Invoice::generate($payment);
-        Log::info('Invoice generated successfully', ['payment_id' => $payment->id]);
-    } catch (\Exception $e) {
-        Log::error('Invoice generation failed', [
-            'payment_id' => $payment->id,
-            'error' => $e->getMessage()
-        ]);
-    }
 
-    $payment->status = PaymentStatus::SUCCESS;
-    $payment->save();
+        if (!$isSuccess) {
+            Log::warning('Payment not successful', ['payment_id' => $payment->id]);
+            return response()->json(['error' => 'Payment not successful']);
+        }
 
-    Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
+        if ($payment->status === PaymentStatus::SUCCESS) {
+            return response()->json(['message' => 'Payment already processed']);
+        }
 
-    $user = $payment->user;
-    $plan = Plan::find(3);
+        // Generowanie faktury - logujemy dane wejściowe i wyjściowe
+        try {
+            Log::info('Generating invoice for payment', [
+                'payment_id' => $payment->id,
+                'user_id' => $payment->user_id,
+                'amount' => $payment->amount,
+                'created_at' => $payment->created_at,
+            ]);
+            Invoice::generate($payment);
+            Log::info('Invoice generated successfully', ['payment_id' => $payment->id]);
+        } catch (\Exception $e) {
+            Log::error('Invoice generation failed', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
-    if (!$plan) {
-        Log::error('Plan ID 3 not found');
-        return response()->json(['error' => 'Plan not found'], 500);
-    }
+        $payment->status = PaymentStatus::SUCCESS;
+        $payment->save();
+
+        Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
+
+        $user = $payment->user;
+        $plan = Plan::find(3);
+
+        if (!$plan) {
+            Log::error('Plan ID 3 not found');
+            return response()->json(['error' => 'Plan not found'], 500);
+        }
 
         // Tworzenie subskrypcji - logujemy szczegóły
+        $user = $payment->user;
+        $plan = Plan::find(3);
+
+        Log::info('User and Plan instances for subscription creation', [
+            'user_class' => is_object($user) ? get_class($user) : 'null',
+            'user_id' => $user->id ?? null,
+            'plan_class' => is_object($plan) ? get_class($plan) : 'null',
+            'plan_id' => $plan->id ?? null,
+        ]);
+
+        if (!$plan) {
+            Log::error('Plan ID 3 not found');
+            return response()->json(['error' => 'Plan not found'], 500);
+        }
+
         try {
+            Log::info('Creating subscription', [
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'starts_at' => now()->toDateTimeString(),
+                'ends_at' => now()->addMonth()->toDateTimeString(),
+            ]);
+
             $subscription = $user
-            ->newPlanSubscription('premium', $plan)
+                ->newPlanSubscription('premium', $plan)
                 ->create([
                     'starts_at' => now(),
                     'ends_at' => now()->addMonth(),
+                    'name' => 'premium', // jawny string zamiast JSON
                 ]);
+
+            Log::info('Subscription created successfully', [
+                'subscription_id' => $subscription->id,
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'starts_at' => $subscription->starts_at->toDateTimeString(),
+                'ends_at' => $subscription->ends_at->toDateTimeString(),
+            ]);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             Log::error('Subscription validation errors', ['errors' => $ve->errors()]);
-            throw $ve;  // albo zwróć response z błędami do klienta
+            return response()->json(['error' => 'Subscription validation failed', 'details' => $ve->errors()], 422);
         } catch (\Exception $e) {
             Log::error('Subscription creation failed', ['error' => $e->getMessage()]);
-            throw $e;
+            return response()->json(['error' => 'Subscription creation failed'], 500);
         }
 
-    return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
-}
+        return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
+    }
 
     public function statusOld(Request $request)
     {
