@@ -10,7 +10,6 @@ use App\Models\Payment;
 use App\Models\PlanSubscription;
 use App\Models\User;
 use Devpark\Transfers24\Requests\Transfers24;
-use Rinvex\Subscriptions\Models\Subscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use function event;
@@ -228,39 +227,20 @@ class PaymentController extends APIController
         }
 
         // Tworzenie subskrypcji - logujemy szczegóły
-// use Rinvex\Subscriptions\Models\Subscription;
+        // use Rinvex\Subscriptions\Models\Subscription;
 
-try {
-    $subscription = Subscription::create([
-        'name' => 'premium',
-        'plan_id' => $plan->id,
-        'subscriber_type' => get_class($user),
-        'subscriber_id' => $user->id,
-        'starts_at' => now(),
-        'ends_at' => now()->addMonth(),
-    ]);
+        $subscription = $user
+            ->newPlanSubscription('premium', $plan)
+            ->create([
+                'starts_at' => now(),
+                'ends_at' => now()->addMonth(),
+            ]);
 
-    Log::info('Subscription created manually using model', [
-        'subscription_id' => $subscription->id,
-        'user_id' => $user->id,
-        'plan_id' => $plan->id,
-    ]);
-} catch (\Illuminate\Validation\ValidationException $ve) {
-    Log::error('Subscription validation errors (manual)', ['errors' => $ve->errors()]);
-    return response()->json([
-        'error' => 'Subscription validation failed (manual)',
-        'details' => $ve->errors()
-    ], 422);
-} catch (\Exception $e) {
-    Log::error('Manual subscription creation failed', [
-        'error' => $e->getMessage(),
-        'trace' => $e->getTraceAsString(),
-    ]);
-    return response()->json([
-        'error' => 'Manual subscription creation failed',
-        'message' => $e->getMessage()
-    ], 500);
-}
+        Log::info('Subscription created', [
+            'subscription_id' => $subscription->id,
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+        ]);
 
 
         return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
