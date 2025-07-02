@@ -463,7 +463,12 @@ class PaymentController extends APIController
         $page = $request->input('page', 1);
 
         // Pobranie płatności
-        $payments = Payment::where("subscriber_id", $user->id)
+        // $payments = Payment::where("subscriber_id", $user->id)
+        $payments = Payment::whereHas('planSubscription', function ($query) use ($user) {
+            $query->where('subscriber_id', $user->id)
+            ->where('subscriber_type', get_class($user))
+                ->whereNull('deleted_at');
+        })->paginate($perPage, ['*'], 'page', $page);
             // ->select(
             //     'payments.id as payment_id',
             //     'payments.status',
@@ -482,7 +487,7 @@ class PaymentController extends APIController
             //     $query->where('subscriber_id', $user->id)->whereNull('deleted_at');
             // })
             // ->orderBy('payments.created_at', 'asc')
-            ->paginate($perPage, ['*'], 'page', $page);
+            // ->paginate($perPage, ['*'], 'page', $page);
 
         // // Konwersja kolekcji na zmodyfikowane dane przed przypisaniem do paginacji
         // $modifiedPayments = $payments->getCollection()->map(function ($payment) {
@@ -514,9 +519,7 @@ class PaymentController extends APIController
             //     'last_page' => $payments->lastPage()
             // ],
             // 'message' => 'Objects fetched',
-        ], 200, [
-            'X-Total-Count' => $payments->total(),
-        ]);
+            ]);
     }
 
     // public function index(Request $request)
