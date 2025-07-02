@@ -173,7 +173,7 @@ class PaymentController extends APIController
         if ($payment->status === PaymentStatus::SUCCESS) {
             return response()->json(['message' => 'Payment already processed']);
         }
-
+        Invoice::generate($payment);
         $payment->status = PaymentStatus::SUCCESS;
         $payment->save();
 
@@ -313,57 +313,57 @@ class PaymentController extends APIController
     // }
 
 
-    public function indexTest(Request $request)
-    {
-        $user = auth()->user();
-        $perPage = 4;
+    // public function indexTest(Request $request)
+    // {
+    //     $user = auth()->user();
+    //     $perPage = 4;
 
-        // Pobierz wszystkie ID subskrypcji użytkownika
-        $subscriptionIds = $user->planSubscriptions()->pluck('id');
+    //     // Pobierz wszystkie ID subskrypcji użytkownika
+    //     $subscriptionIds = $user->planSubscriptions()->pluck('id');
 
-        // Pobierz płatności powiązane z tymi subskrypcjami
-        $payments = Payment::whereIn('plan_subscription_id', $subscriptionIds)
-        ->select(
-            'payments.id as payment_id',
-            'payments.status',
-            'payments.error_code',
-            'payments.error_description',
-            'payments.session_id',
-            // 'payments.plan_subscription_id',
-            'payments.ifirma_invoice_id',
-            'payments.created_at',
-            'payments.updated_at'
-        )
-            ->orderBy('payments.created_at', 'desc')
-            ->paginate($perPage);
+    //     // Pobierz płatności powiązane z tymi subskrypcjami
+    //     $payments = Payment::whereIn('plan_subscription_id', $subscriptionIds)
+    //     ->select(
+    //         'payments.id as payment_id',
+    //         'payments.status',
+    //         'payments.error_code',
+    //         'payments.error_description',
+    //         'payments.session_id',
+    //         // 'payments.plan_subscription_id',
+    //         'payments.ifirma_invoice_id',
+    //         'payments.created_at',
+    //         'payments.updated_at'
+    //     )
+    //         ->orderBy('payments.created_at', 'desc')
+    //         ->paginate($perPage);
 
-        // Mapowanie danych
-        $payments->getCollection()->transform(function ($payment) {
-            return [
-                'payment_id' => $payment->payment_id,
-                'status' => $payment->status,
-                'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
-                'error_code' => $payment->error_code,
-                'error_description' => $payment->error_description,
-                // 'plan_subscription_id' => $payment->plan_subscription_id,
-                'ifirma_invoice_id' => $payment->ifirma_invoice_id,
-                'date' => optional($payment->created_at)->format('d.m.Y'),
-                // 'price' => 40,
-            ];
-        });
+    //     // Mapowanie danych
+    //     $payments->getCollection()->transform(function ($payment) {
+    //         return [
+    //             'payment_id' => $payment->payment_id,
+    //             'status' => $payment->status,
+    //             'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
+    //             'error_code' => $payment->error_code,
+    //             'error_description' => $payment->error_description,
+    //             // 'plan_subscription_id' => $payment->plan_subscription_id,
+    //             'ifirma_invoice_id' => $payment->ifirma_invoice_id,
+    //             'date' => optional($payment->created_at)->format('d.m.Y'),
+    //             // 'price' => 40,
+    //         ];
+    //     });
 
-        return response()->json([
-            'data' => $payments,
-            'pagination' => [
-                'total' => $payments->total(),
-                'per_page' => $payments->perPage(),
-                'current_page' => $payments->currentPage(),
-                'last_page' => $payments->lastPage()
-            ],
-        ], 200, [
-            'X-Total-Count' => $payments->total(),
-        ]);
-    }
+    //     return response()->json([
+    //         'data' => $payments,
+    //         'pagination' => [
+    //             'total' => $payments->total(),
+    //             'per_page' => $payments->perPage(),
+    //             'current_page' => $payments->currentPage(),
+    //             'last_page' => $payments->lastPage()
+    //         ],
+    //     ], 200, [
+    //         'X-Total-Count' => $payments->total(),
+    //     ]);
+    // }
 
     public function index(Request $request)
     {

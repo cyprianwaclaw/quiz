@@ -104,27 +104,27 @@ class UserPlanController extends APIController
         return response()->json(['message' => 'Plan activated'], 200);
     }
 
-    public function buyPlanOld(Request $request)
-    {
-        $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
-        $plan = Plan::findOrFail($request->input('plan'));
-        if ($plan->price > 0) {
-            $planSubscription = auth()->user()->newPlanSubscription('mertrtretain', $plan);
-            // $planSubscription = auth()->user()
-            // ->newPlanSubscription('mertrtretain', $plan)
-            // ->create();
-            $planSubscription = 3;
+    // public function buyPlanOld(Request $request)
+    // {
+    //     $validated = $request->validate(['plan' => 'required|integer|exists:App\Models\Plan,id']);
+    //     $plan = Plan::findOrFail($request->input('plan'));
+    //     if ($plan->price > 0) {
+    //         $planSubscription = auth()->user()->newPlanSubscription('mertrtretain', $plan);
+    //         // $planSubscription = auth()->user()
+    //         // ->newPlanSubscription('mertrtretain', $plan)
+    //         // ->create();
+    //         $planSubscription = 3;
 
-            // $planSubscription->ends_at = now();
-            // $planSubscription->save();
-            // // return $this->$planSubscription;
-            // Log::error('Błąd transakcji', ['error' =>   "payment"]);
+    //         // $planSubscription->ends_at = now();
+    //         // $planSubscription->save();
+    //         // // return $this->$planSubscription;
+    //         // Log::error('Błąd transakcji', ['error' =>   "payment"]);
 
-            return $this->paymentTransaction($planSubscription, $plan);
-        } else {
-            return $this->sendError('Ten plan jest niedostępny');
-        }
-    }
+    //         return $this->paymentTransaction($planSubscription, $plan);
+    //     } else {
+    //         return $this->sendError('Ten plan jest niedostępny');
+    //     }
+    // }
 
 
 
