@@ -128,7 +128,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     });
     Route::get('plans', [PlanController::class, 'index']);
     Route::post('buy-plan', [UserPlanController::class, 'buyPlan']);
-    Route::get('payments', [PaymentController::class, 'indexTest']);
+    Route::get('payments', [PaymentController::class, 'index']);
 
     Route::get('payments/{payment}/download', [PaymentController::class, 'downloadInvoice']);
     Route::get('hello', [SampleController::class, 'hello']);
