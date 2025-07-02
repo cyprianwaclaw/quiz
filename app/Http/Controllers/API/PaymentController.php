@@ -463,7 +463,7 @@ class PaymentController extends APIController
         $page = $request->input('page', 1);
 
         // Pobranie płatności
-        $payments = $user->payments()
+        $payments = Payment::where("subscriber_id", $user->id)
             // ->select(
             //     'payments.id as payment_id',
             //     'payments.status',
