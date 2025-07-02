@@ -64,8 +64,13 @@ class CompetitionController extends Controller
         if (isset($input['second_points'])) $quiz->second_points = $input['second_points'];
         if (isset($input['third_points'])) $quiz->third_points = $input['third_points'];
         if (isset($input['difficulty'])) $quiz->difficulty = $input['difficulty'];
+        // if (isset($input['image']) && $input['image'] != NULL) {
+        //     $quiz->image = Storage::disk('quiz_images')->url($input['image']->store('', 'quiz_images'));
+        // }
         if (isset($input['image']) && $input['image'] != NULL) {
-            $quiz->image = Storage::disk('quiz_images')->url($input['image']->store('', 'quiz_images'));
+            // $quiz->image = Storage::disk('quiz_images')->url($input['image']->store('', 'quiz_images'));
+            $image_path = $input['image']->store('', 'quiz_images');
+            $quiz->image = secure_url('storage/quiz_images/' . basename($image_path));
         }
         $quiz->save();
         $quiz->refresh();
