@@ -464,17 +464,17 @@ class PaymentController extends APIController
 
         // Pobranie płatności
         $payments = $user->payments()
-            ->select(
-                'payments.id as payment_id',
-                'payments.status',
-                'payments.error_code',
-                'payments.error_description',
-                'payments.session_id',
-                // 'payments.plan_subscription_id',
-                'payments.ifirma_invoice_id',
-                'payments.created_at',
-                'payments.updated_at'
-            )
+            // ->select(
+            //     'payments.id as payment_id',
+            //     'payments.status',
+            //     'payments.error_code',
+            //     'payments.error_description',
+            //     'payments.session_id',
+            //     // 'payments.plan_subscription_id',
+            //     'payments.ifirma_invoice_id',
+            //     'payments.created_at',
+            //     'payments.updated_at'
+            // )
             // ->with(['planSubscription' => function ($query) {
             //     $query->select('id as plan_subscription_id', 'subscriber_id as laravel_through_key');
             // }])
@@ -484,22 +484,22 @@ class PaymentController extends APIController
             // ->orderBy('payments.created_at', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        // Konwersja kolekcji na zmodyfikowane dane przed przypisaniem do paginacji
-        $modifiedPayments = $payments->getCollection()->map(function ($payment) {
-            return [
-                'payment_id' => $payment->payment_id,
-                'status' => $payment->status,
-                'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
-                'error_code' => $payment->error_code,
-                'error_description' => $payment->error_description,
-                // 'session_id' => $payment->session_id,
-                // 'plan_subscription_id' => $payment->plan_subscription_id,
-                'ifirma_invoice_id' => $payment->ifirma_invoice_id,
-                'date' => optional($payment->created_at)->format('d.m.Y'),
-                // 'updated_at' => optional($payment->updated_at)->format('d.m.Y'),
-                'price' => 40,
-            ];
-        });
+        // // Konwersja kolekcji na zmodyfikowane dane przed przypisaniem do paginacji
+        // $modifiedPayments = $payments->getCollection()->map(function ($payment) {
+        //     return [
+        //         'payment_id' => $payment->payment_id,
+        //         'status' => $payment->status,
+        //         'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
+        //         'error_code' => $payment->error_code,
+        //         'error_description' => $payment->error_description,
+        //         // 'session_id' => $payment->session_id,
+        //         // 'plan_subscription_id' => $payment->plan_subscription_id,
+        //         'ifirma_invoice_id' => $payment->ifirma_invoice_id,
+        //         'date' => optional($payment->created_at)->format('d.m.Y'),
+        //         // 'updated_at' => optional($payment->updated_at)->format('d.m.Y'),
+        //         'price' => 40,
+        //     ];
+        // });
 
         // Zamiana zmodyfikowanej kolekcji w paginatorze
         $payments->setCollection($modifiedPayments);
@@ -507,11 +507,11 @@ class PaymentController extends APIController
         return response()->json([
             // 'success' => true,
             'data' => $payments,
-            'pagination' => [
-                'total' => $payments->total(),
-                'per_page' => $payments->perPage(),
-                'current_page' => $payments->currentPage(),
-                'last_page' => $payments->lastPage()
+            // 'pagination' => [
+            //     'total' => $payments->total(),
+            //     'per_page' => $payments->perPage(),
+            //     'current_page' => $payments->currentPage(),
+            //     'last_page' => $payments->lastPage()
             ],
             // 'message' => 'Objects fetched',
         ], 200, [
