@@ -226,37 +226,21 @@ public function status(Request $request)
         return response()->json(['error' => 'Plan not found'], 500);
     }
 
-    // Tworzenie subskrypcji - logujemy szczegóły
-    try {
-        Log::info('Creating subscription', [
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'starts_at' => now()->toDateTimeString(),
-            'ends_at' => now()->addMonth()->toDateTimeString(),
-        ]);
-
-        $subscription = $user
+        // Tworzenie subskrypcji - logujemy szczegóły
+        try {
+            $subscription = $user
             ->newPlanSubscription('premium', $plan)
-            ->create([
-                'starts_at' => now(),
-                'ends_at' => now()->addMonth(),
-            ]);
-
-        Log::info('Subscription created successfully', [
-            'subscription_id' => $subscription->id,
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'starts_at' => $subscription->starts_at->toDateTimeString(),
-            'ends_at' => $subscription->ends_at->toDateTimeString(),
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Subscription creation failed', [
-            'user_id' => $user->id ?? null,
-            'plan_id' => $plan->id ?? null,
-            'error' => $e->getMessage()
-        ]);
-        return response()->json(['error' => 'Subscription creation failed'], 500);
-    }
+                ->create([
+                    'starts_at' => now(),
+                    'ends_at' => now()->addMonth(),
+                ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            Log::error('Subscription validation errors', ['errors' => $ve->errors()]);
+            throw $ve;  // albo zwróć response z błędami do klienta
+        } catch (\Exception $e) {
+            Log::error('Subscription creation failed', ['error' => $e->getMessage()]);
+            throw $e;
+        }
 
     return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
 }
