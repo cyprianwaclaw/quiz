@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\PlanSubscription;
 use App\Models\User;
 use Devpark\Transfers24\Requests\Transfers24;
+use Rinvex\Subscriptions\Models\Subscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use function event;
@@ -227,54 +228,39 @@ class PaymentController extends APIController
         }
 
         // Tworzenie subskrypcji - logujemy szczegóły
-        $user = $payment->user;
-        $plan = Plan::find(3);
+// use Rinvex\Subscriptions\Models\Subscription;
 
-        Log::info('Creating subscription manually', [
-            'user_id' => $user->id,
-            'user_class' => get_class($user),
-            'plan_id' => $plan->id,
-            'plan_class' => get_class($plan),
-            'subscriber_type' => get_class($user),
-            'subscriber_id' => $user->id,
-            'starts_at' => now()->toDateTimeString(),
-            'ends_at' => now()->addMonth()->toDateTimeString(),
-        ]);
+try {
+    $subscription = Subscription::create([
+        'name' => 'premium',
+        'plan_id' => $plan->id,
+        'subscriber_type' => get_class($user),
+        'subscriber_id' => $user->id,
+        'starts_at' => now(),
+        'ends_at' => now()->addMonth(),
+    ]);
 
-        try {
-            $subscription = $user
-                ->newPlanSubscription('premium', $plan)
-                ->create([
-                    'name' => 'premium',
-                    'plan_id' => $plan->id,
-                    'subscriber_type' => get_class($user),
-                    'subscriber_id' => $user->id,
-                    'starts_at' => now(),
-                    'ends_at' => now()->addMonth(),
-                ]);
-
-            Log::info('Subscription created successfully', [
-                'subscription_id' => $subscription->id,
-                'user_id' => $user->id,
-                'plan_id' => $plan->id,
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            Log::error('Subscription validation errors', ['errors' => $ve->errors()]);
-            return response()->json([
-                'error' => 'Subscription validation failed',
-                'details' => $ve->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Subscription creation failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(), // opcjonalnie, gdyby problem był z klasami
-            ]);
-            return response()->json([
-                'error' => 'Subscription creation failed',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-
+    Log::info('Subscription created manually using model', [
+        'subscription_id' => $subscription->id,
+        'user_id' => $user->id,
+        'plan_id' => $plan->id,
+    ]);
+} catch (\Illuminate\Validation\ValidationException $ve) {
+    Log::error('Subscription validation errors (manual)', ['errors' => $ve->errors()]);
+    return response()->json([
+        'error' => 'Subscription validation failed (manual)',
+        'details' => $ve->errors()
+    ], 422);
+} catch (\Exception $e) {
+    Log::error('Manual subscription creation failed', [
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString(),
+    ]);
+    return response()->json([
+        'error' => 'Manual subscription creation failed',
+        'message' => $e->getMessage()
+    ], 500);
+}
 
 
         return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
