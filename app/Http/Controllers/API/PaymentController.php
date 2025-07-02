@@ -464,7 +464,7 @@ class PaymentController extends APIController
 
         // Pobranie płatności
         // $payments = Payment::where("subscriber_id", $user->id)
-        $payments = Payment::paginate($perPage, ['*'], 'page', $page);
+        $payments = Payment::where("user_id", $user->id)->paginate($perPage, ['*'], 'page', $page);
             // ->select(
             //     'payments.id as payment_id',
             //     'payments.status',
