@@ -168,31 +168,31 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Payout::class);
     }
 
-    public function planSubscriptions()
-    {
-        return $this->hasMany(PlanSubscription::class, 'subscriber_id');
-    }
-
-    public function payments()
-    {
-        return $this->hasMany(Payment::class, 'user_id');
-    }
-
     // public function planSubscriptions()
     // {
-    //     return $this->morphMany(PlanSubscription::class, 'subscriber');
+    //     return $this->hasMany(PlanSubscription::class, 'subscriber_id');
     // }
 
     // public function payments()
     // {
-    //     return $this->hasManyThrough(
-    //         Payment::class,
-    //         PlanSubscription::class,
-    //         'subscriber_id', // to nie zadziała, bo masz morphs!
-    //         'plan_subscription_id',
-    //         'id',
-    //         'id'
-    //     );
+    //     return $this->hasMany(Payment::class, 'user_id');
     // }
+
+    public function planSubscriptions()
+    {
+        return $this->morphMany(PlanSubscription::class, 'subscriber');
+    }
+
+    public function payments()
+    {
+        return $this->hasManyThrough(
+            Payment::class,
+            PlanSubscription::class,
+            'subscriber_id', // to nie zadziała, bo masz morphs!
+            'plan_subscription_id',
+            'id',
+            'id'
+        );
+    }
 
 }
