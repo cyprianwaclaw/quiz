@@ -201,7 +201,7 @@ class PaymentController extends APIController
             Log::info('Generating invoice for payment', [
                 'payment_id' => $payment->id,
                 'user_id' => $payment->user_id,
-                'amount' => $payment->amount,
+                'amount' => 40.00,
                 'created_at' => $payment->created_at,
             ]);
             Invoice::generate($payment);
@@ -222,7 +222,6 @@ class PaymentController extends APIController
         $plan = Plan::find(3);
 
         if (!$plan) {
-            Log::error('Plan ID 3 not found');
             return response()->json(['error' => 'Plan not found'], 500);
         }
 
