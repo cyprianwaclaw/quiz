@@ -512,7 +512,7 @@ class PaymentController extends APIController
             //     'per_page' => $payments->perPage(),
             //     'current_page' => $payments->currentPage(),
             //     'last_page' => $payments->lastPage()
-            ],
+            // ],
             // 'message' => 'Objects fetched',
         ], 200, [
             'X-Total-Count' => $payments->total(),
