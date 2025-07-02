@@ -230,48 +230,23 @@ class PaymentController extends APIController
         $user = $payment->user;
         $plan = Plan::find(3);
 
-        Log::info('User and Plan instances for subscription creation', [
-            'user_class' => is_object($user) ? get_class($user) : 'null',
-            'user_id' => $user->id ?? null,
-            'plan_class' => is_object($plan) ? get_class($plan) : 'null',
-            'plan_id' => $plan->id ?? null,
+        //    $subscription = $user
+        //     ->newPlanSubscription('premium', $plan)
+        //     ->create([
+        //         'starts_at' => now(),
+        //         'ends_at' => now()->addMonth(),
+        //     ]);
+
+        $subscription = $user
+            ->newPlanSubscription('premium', $plan)
+            ->create([
+            'name' => 'premium',
+            'plan_id' => $plan->id,
+            'subscriber_type' => get_class($user),
+            'subscriber_id' => $user->id,
+            'starts_at' => now(),
+            'ends_at' => now()->addMonth(),
         ]);
-
-        if (!$plan) {
-            Log::error('Plan ID 3 not found');
-            return response()->json(['error' => 'Plan not found'], 500);
-        }
-
-        try {
-            Log::info('Creating subscription', [
-                'user_id' => $user->id,
-                'plan_id' => $plan->id,
-                'starts_at' => now()->toDateTimeString(),
-                'ends_at' => now()->addMonth()->toDateTimeString(),
-            ]);
-
-            $subscription = $user
-                ->newPlanSubscription('premium', $plan)
-                ->create([
-                    'starts_at' => now(),
-                    'ends_at' => now()->addMonth(),
-                    'name' => 'premium', // jawny string zamiast JSON
-                ]);
-
-            Log::info('Subscription created successfully', [
-                'subscription_id' => $subscription->id,
-                'user_id' => $user->id,
-                'plan_id' => $plan->id,
-                'starts_at' => $subscription->starts_at->toDateTimeString(),
-                'ends_at' => $subscription->ends_at->toDateTimeString(),
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            Log::error('Subscription validation errors', ['errors' => $ve->errors()]);
-            return response()->json(['error' => 'Subscription validation failed', 'details' => $ve->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Subscription creation failed', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Subscription creation failed'], 500);
-        }
 
         return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
     }
