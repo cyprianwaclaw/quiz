@@ -462,9 +462,28 @@ class PaymentController extends APIController
         $perPage = 4;
         $page = $request->input('page', 1);
 
+
+        $payments = Payment::where("user_id", $user->id)
+        ->orderByDesc('created_at')
+        ->paginate($perPage, ['*'], 'page', $page);
+
+        // Mapujemy dane do żądanej struktury
+        $mapped = $payments->getCollection()->map(function ($payment) {
+            return [
+                'payment_id' => $payment->id,
+                'status' => $payment->status,
+                'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
+                'error_code' => $payment->error_code,
+                'error_description' => $payment->error_description,
+                'ifirma_invoice_id' => $payment->ifirma_invoice_id,
+                'date' => optional($payment->created_at)->format('d.m.Y'),
+                'price' => 40, // stała wartość — zmień jeśli potrzebujesz dynamicznie
+            ];
+
+        });
         // Pobranie płatności
         // $payments = Payment::where("subscriber_id", $user->id)
-        $payments = Payment::where("user_id", $user->id)->paginate($perPage, ['*'], 'page', $page);
+        // $payments = Payment::where("user_id", $user->id)->paginate($perPage, ['*'], 'page', $page);
             // ->select(
             //     'payments.id as payment_id',
             //     'payments.status',
@@ -503,7 +522,7 @@ class PaymentController extends APIController
         // });
 
         // Zamiana zmodyfikowanej kolekcji w paginatorze
-        // $payments->setCollection($modifiedPayments);
+        $payments->setCollection($mapped);
 
         return response()->json([
             // 'success' => true,
