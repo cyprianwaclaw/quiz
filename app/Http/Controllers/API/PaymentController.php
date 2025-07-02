@@ -502,7 +502,7 @@ class PaymentController extends APIController
         // });
 
         // Zamiana zmodyfikowanej kolekcji w paginatorze
-        $payments->setCollection($modifiedPayments);
+        // $payments->setCollection($modifiedPayments);
 
         return response()->json([
             // 'success' => true,
