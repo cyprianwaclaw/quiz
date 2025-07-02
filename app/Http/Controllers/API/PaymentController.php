@@ -527,12 +527,12 @@ class PaymentController extends APIController
         return response()->json([
             // 'success' => true,
             'data' => $payments,
-            // 'pagination' => [
-            //     'total' => $payments->total(),
-            //     'per_page' => $payments->perPage(),
-            //     'current_page' => $payments->currentPage(),
-            //     'last_page' => $payments->lastPage()
-            // ],
+            'pagination' => [
+                'total' => $payments->total(),
+                'per_page' => $payments->perPage(),
+                'current_page' => $payments->currentPage(),
+                'last_page' => $payments->lastPage()
+            ],
             // 'message' => 'Objects fetched',
             ]);
     }
