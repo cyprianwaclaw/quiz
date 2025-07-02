@@ -154,8 +154,95 @@ class PaymentController extends APIController
      * Trying change payment status to SUCCESS,
      */
 
-
     public function status(Request $request)
+    {
+        Log::info('Webhook received - full request', $request->all());
+
+        try {
+            // Odbierz i zweryfikuj webhook (implementacja w transfers24)
+            $response = $this->transfers24->receive($request);
+
+            $sessionId = $response->getSessionId();
+            $paymentStatusFromWebhook = $response->getStatus(); // zakładam, że jest metoda getStatus()
+
+            Log::info('Parsed sessionId and status from webhook', [
+                'session_id' => $sessionId,
+                'status' => $paymentStatusFromWebhook,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to parse webhook data', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Invalid webhook data'], 400);
+        }
+
+        // Szukamy płatności po session_id
+        $payment = Payment::where('session_id', $sessionId)->first();
+
+        if (!$payment) {
+            Log::error('Payment not found for session_id', ['session_id' => $sessionId]);
+            return response()->json(['error' => 'Payment not found'], 404);
+        }
+
+        Log::info('Payment found', ['payment_id' => $payment->id, 'current_status' => $payment->status]);
+
+        // Sprawdzamy status płatności z webhooka — jeśli jest sukces, zmieniamy status
+        if ($paymentStatusFromWebhook === 'success' || $paymentStatusFromWebhook === PaymentStatus::SUCCESS) {
+            if ($payment->status === PaymentStatus::SUCCESS) {
+                Log::warning('Payment already processed as SUCCESS', ['payment_id' => $payment->id]);
+                return response()->json(['message' => 'Payment already processed']);
+            }
+
+            try {
+                Invoice::generate($payment);
+                Log::info('Invoice generated', ['payment_id' => $payment->id]);
+            } catch (\Exception $e) {
+                Log::error('Invoice generation failed', ['payment_id' => $payment->id, 'error' => $e->getMessage()]);
+                // Można tu zdecydować, czy przerywać działanie, czy iść dalej
+            }
+
+            $payment->status = PaymentStatus::SUCCESS;
+            $payment->save();
+
+            Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
+
+            $user = $payment->user;
+            $plan = Plan::find(3);
+
+            if (!$plan) {
+                Log::error('Plan ID 3 not found');
+                return response()->json(['error' => 'Plan not found'], 500);
+            }
+
+            try {
+                $subscription = $user
+                    ->newPlanSubscription('premium', $plan)
+                    ->create([
+                        'starts_at' => now(),
+                        'ends_at' => now()->addMonth(),
+                    ]);
+                Log::info('Subscription created', [
+                    'subscription_id' => $subscription->id,
+                    'user_id' => $user->id,
+                    'plan_id' => $plan->id,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Subscription creation failed', ['error' => $e->getMessage()]);
+                return response()->json(['error' => 'Subscription creation failed'], 500);
+            }
+
+            return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
+        }
+
+        // Jeśli status płatności z webhooka to coś innego niż sukces:
+        Log::info('Payment status from webhook is not success, no changes made', [
+            'payment_id' => $payment->id,
+            'webhook_status' => $paymentStatusFromWebhook,
+        ]);
+
+        return response()->json(['message' => 'Payment status not updated, current status: ' . $payment->status]);
+    }
+
+
+    public function statusOld(Request $request)
     {
         Log::info('Webhook received', $request->all());
 
@@ -203,47 +290,47 @@ class PaymentController extends APIController
         return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
     }
 
-    public function status1(Request $request)
-    {
-        \Log::info('Webhook received', $request->all());
+    // public function status1(Request $request)
+    // {
+    //     \Log::info('Webhook received', $request->all());
 
-        $response = $this->transfers24->receive($request);
-        \Log::info('Response from Transfers24', [
-            'session_id' => $response->getSessionId(),
-            'status' => $response->isSuccess()
-        ]);
+    //     $response = $this->transfers24->receive($request);
+    //     \Log::info('Response from Transfers24', [
+    //         'session_id' => $response->getSessionId(),
+    //         'status' => $response->isSuccess()
+    //     ]);
 
-        $payment = Payment::where('session_id', $response->getSessionId())->first();
+    //     $payment = Payment::where('session_id', $response->getSessionId())->first();
 
-        if (!$payment) {
-            \Log::error('Payment not found for session_id', ['session_id' => $response->getSessionId()]);
-            return response()->json(['error' => 'Payment not found'], 404);
-        }
+    //     if (!$payment) {
+    //         \Log::error('Payment not found for session_id', ['session_id' => $response->getSessionId()]);
+    //         return response()->json(['error' => 'Payment not found'], 404);
+    //     }
 
-        \Log::info('Payment found', ['payment_id' => $payment->id]);
+    //     \Log::info('Payment found', ['payment_id' => $payment->id]);
 
-        try {
-            \Log::info('Generating invoice before status change');
-            Invoice::generate($payment);
-            \Log::info('Invoice generated successfully');
-        } catch (\Exception $e) {
-            \Log::error('Error generating invoice', ['message' => $e->getMessage(), 'payment_id' => $payment->id]);
-        }
+    //     try {
+    //         \Log::info('Generating invoice before status change');
+    //         Invoice::generate($payment);
+    //         \Log::info('Invoice generated successfully');
+    //     } catch (\Exception $e) {
+    //         \Log::error('Error generating invoice', ['message' => $e->getMessage(), 'payment_id' => $payment->id]);
+    //     }
 
-        // 🔴 Sprawdź, czy kod dochodzi do tego miejsca
-        \Log::info('Updating payment status', ['payment_id' => $payment->id]);
-        $payment->status = PaymentStatus::SUCCESS;
-        $payment->save();
+    //     // 🔴 Sprawdź, czy kod dochodzi do tego miejsca
+    //     \Log::info('Updating payment status', ['payment_id' => $payment->id]);
+    //     $payment->status = PaymentStatus::SUCCESS;
+    //     $payment->save();
 
-        \Log::info('Payment status updated successfully', ['payment_id' => $payment->id, 'status' => $payment->status]);
-        // Pobierz użytkownika, który dokonał płatności
-        // $user = $payment->user;
-        // \Log::info('Payment usery', ['user' => $user]);
+    //     \Log::info('Payment status updated successfully', ['payment_id' => $payment->id, 'status' => $payment->status]);
+    //     // Pobierz użytkownika, który dokonał płatności
+    //     // $user = $payment->user;
+    //     // \Log::info('Payment usery', ['user' => $user]);
 
-        // $this->giveUserPremium($user);
+    //     // $this->giveUserPremium($user);
 
-        return response()->json(['message' => 'Payment status updated']);
-    }
+    //     return response()->json(['message' => 'Payment status updated']);
+    // }
     /**
      * Download invoice by payment ID
      *
