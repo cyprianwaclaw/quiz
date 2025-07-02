@@ -203,6 +203,7 @@ class PaymentController extends APIController
                 'user_id' => $payment->user_id,
                 'amount' => 40.00,
                 'created_at' => $payment->created_at,
+                $payment,
             ]);
             Invoice::generate($payment);
             Log::info('Invoice generated successfully', ['payment_id' => $payment->id]);
