@@ -15,7 +15,7 @@ class Invoice extends Model
 
     public static function generate(Payment $payment): void
     {
-        $planSubscription = $payment->planSubscription()->with(['subscriber','subscriber.company'])->firstOrFail();
+        // $planSubscription = $payment->planSubscription()->with(['subscriber','subscriber.company'])->firstOrFail();
         $user = $planSubscription->subscriber;
         $plan = $planSubscription->plan;
         $invoice = new \App\Http\Controllers\IFirmaApi\Invoice();
