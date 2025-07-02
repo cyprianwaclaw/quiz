@@ -246,11 +246,14 @@ class CompetitionController extends Controller
     //     ], 200);
     // }
 
-    public function isCompetitions(): \Illuminate\Http\JsonResponse
+    public function isCompetitions(Request $request)
     {
         $userId = auth()->id();
+        $competition_id = $request->input('competition_id');
 
-        $hasCompetitions = CompetitionSubmission::where('user_id', $userId)->exists();
+        $hasCompetitions = CompetitionSubmission::where('user_id', $userId)
+        ->where('competition_id', $competition_id)
+        ->exists();
 
         return response()->json([
             'has_competitions' => $hasCompetitions,
