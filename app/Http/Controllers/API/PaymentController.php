@@ -154,93 +154,83 @@ class PaymentController extends APIController
      * Trying change payment status to SUCCESS,
      */
 
-    public function status(Request $request)
-    {
-        Log::info('Webhook received - full request', $request->all());
+public function status(Request $request)
+{
+    Log::info('Webhook received - full request', $request->all());
 
-        try {
-            // Odbierz i zweryfikuj webhook (implementacja w transfers24)
-            $response = $this->transfers24->receive($request);
+    try {
+        $response = $this->transfers24->receive($request);
+        $sessionId = $response->getSessionId();
 
-            $sessionId = $response->getSessionId();
-            $paymentStatusFromWebhook = $response->getStatus(); // zakładam, że jest metoda getStatus()
+        $isSuccess = method_exists($response, 'isSuccess') ? $response->isSuccess() : false;
 
-            Log::info('Parsed sessionId and status from webhook', [
-                'session_id' => $sessionId,
-                'status' => $paymentStatusFromWebhook,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to parse webhook data', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Invalid webhook data'], 400);
-        }
-
-        // Szukamy płatności po session_id
-        $payment = Payment::where('session_id', $sessionId)->first();
-
-        if (!$payment) {
-            Log::error('Payment not found for session_id', ['session_id' => $sessionId]);
-            return response()->json(['error' => 'Payment not found'], 404);
-        }
-
-        Log::info('Payment found', ['payment_id' => $payment->id, 'current_status' => $payment->status]);
-
-        // Sprawdzamy status płatności z webhooka — jeśli jest sukces, zmieniamy status
-        if ($paymentStatusFromWebhook === 'success' || $paymentStatusFromWebhook === PaymentStatus::SUCCESS) {
-            if ($payment->status === PaymentStatus::SUCCESS) {
-                Log::warning('Payment already processed as SUCCESS', ['payment_id' => $payment->id]);
-                return response()->json(['message' => 'Payment already processed']);
-            }
-
-            try {
-                Invoice::generate($payment);
-                Log::info('Invoice generated', ['payment_id' => $payment->id]);
-            } catch (\Exception $e) {
-                Log::error('Invoice generation failed', ['payment_id' => $payment->id, 'error' => $e->getMessage()]);
-                // Można tu zdecydować, czy przerywać działanie, czy iść dalej
-            }
-
-            $payment->status = PaymentStatus::SUCCESS;
-            $payment->save();
-
-            Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
-
-            $user = $payment->user;
-            $plan = Plan::find(3);
-
-            if (!$plan) {
-                Log::error('Plan ID 3 not found');
-                return response()->json(['error' => 'Plan not found'], 500);
-            }
-
-            try {
-                $subscription = $user
-                    ->newPlanSubscription('premium', $plan)
-                    ->create([
-                        'starts_at' => now(),
-                        'ends_at' => now()->addMonth(),
-                    ]);
-                Log::info('Subscription created', [
-                    'subscription_id' => $subscription->id,
-                    'user_id' => $user->id,
-                    'plan_id' => $plan->id,
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Subscription creation failed', ['error' => $e->getMessage()]);
-                return response()->json(['error' => 'Subscription creation failed'], 500);
-            }
-
-            return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
-        }
-
-        // Jeśli status płatności z webhooka to coś innego niż sukces:
-        Log::info('Payment status from webhook is not success, no changes made', [
-            'payment_id' => $payment->id,
-            'webhook_status' => $paymentStatusFromWebhook,
+        Log::info('Parsed webhook response', [
+            'session_id' => $sessionId,
+            'is_success' => $isSuccess,
         ]);
-
-        return response()->json(['message' => 'Payment status not updated, current status: ' . $payment->status]);
+    } catch (\Exception $e) {
+        Log::error('Failed to parse webhook', ['error' => $e->getMessage()]);
+        return response()->json(['error' => 'Invalid webhook data'], 400);
     }
 
+    $payment = Payment::where('session_id', $sessionId)->first();
+
+    if (!$payment) {
+        Log::error('Payment not found', ['session_id' => $sessionId]);
+        return response()->json(['error' => 'Payment not found'], 404);
+    }
+
+    Log::info('Payment found', ['payment_id' => $payment->id, 'status' => $payment->status]);
+
+    if (!$isSuccess) {
+        Log::warning('Payment not successful', ['payment_id' => $payment->id]);
+        return response()->json(['error' => 'Payment not successful']);
+    }
+
+    if ($payment->status === PaymentStatus::SUCCESS) {
+        Log::warning('Payment already processed', ['payment_id' => $payment->id]);
+        return response()->json(['message' => 'Payment already processed']);
+    }
+
+    try {
+        Invoice::generate($payment);
+        Log::info('Invoice generated', ['payment_id' => $payment->id]);
+    } catch (\Exception $e) {
+        Log::error('Invoice generation failed', ['error' => $e->getMessage()]);
+    }
+
+    $payment->status = PaymentStatus::SUCCESS;
+    $payment->save();
+
+    Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
+
+    $user = $payment->user;
+    $plan = Plan::find(3);
+
+    if (!$plan) {
+        Log::error('Plan ID 3 not found');
+        return response()->json(['error' => 'Plan not found'], 500);
+    }
+
+    try {
+        $subscription = $user
+            ->newPlanSubscription('premium', $plan)
+            ->create([
+                'starts_at' => now(),
+                'ends_at' => now()->addMonth(),
+            ]);
+        Log::info('Subscription created', [
+            'subscription_id' => $subscription->id,
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Subscription creation failed', ['error' => $e->getMessage()]);
+        return response()->json(['error' => 'Subscription creation failed'], 500);
+    }
+
+    return response()->json(['message' => 'Plan activated', 'plan_id' => $plan->id]);
+}
 
     public function statusOld(Request $request)
     {
