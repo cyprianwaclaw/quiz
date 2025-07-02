@@ -329,7 +329,7 @@ class PaymentController extends APIController
             'payments.error_code',
             'payments.error_description',
             'payments.session_id',
-            'payments.plan_subscription_id',
+            // 'payments.plan_subscription_id',
             'payments.ifirma_invoice_id',
             'payments.created_at',
             'payments.updated_at'
@@ -345,7 +345,7 @@ class PaymentController extends APIController
                 'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
                 'error_code' => $payment->error_code,
                 'error_description' => $payment->error_description,
-                'plan_subscription_id' => $payment->plan_subscription_id,
+                // 'plan_subscription_id' => $payment->plan_subscription_id,
                 'ifirma_invoice_id' => $payment->ifirma_invoice_id,
                 'date' => optional($payment->created_at)->format('d.m.Y'),
                 // 'price' => 40,
