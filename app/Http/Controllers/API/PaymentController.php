@@ -465,17 +465,17 @@ class PaymentController extends APIController
         // Pobranie płatności
         // $payments = Payment::where("subscriber_id", $user->id)
         $payments = Payment::where("user_id", $user->id)
-            ->select(
-                'payments.id as payment_id',
-                'payments.status',
-                'payments.error_code',
-                'payments.error_description',
-                'payments.session_id',
-                // 'payments.plan_subscription_id',
-                'payments.ifirma_invoice_id',
-                'payments.created_at',
-                'payments.updated_at'
-            )
+            // ->select(
+            //     'payments.id as payment_id',
+            //     'payments.status',
+            //     'payments.error_code',
+            //     'payments.error_description',
+            //     'payments.session_id',
+            //     // 'payments.plan_subscription_id',
+            //     'payments.ifirma_invoice_id',
+            //     'payments.created_at',
+            //     'payments.updated_at'
+            // )
             ->with(['planSubscription' => function ($query) {
                 $query->select('id as plan_subscription_id', 'subscriber_id as laravel_through_key');
             }])
