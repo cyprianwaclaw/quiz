@@ -210,7 +210,7 @@ class PaymentController extends APIController
         } catch (\Exception $e) {
             Log::error('Invoice generation failed', [
                 'payment_id' => $payment->id,
-                'payment' =>  $payment->planSubscription()->with(['subscriber','subscriber.company'])->firstOrFail(),
+                // 'payment' =>  $payment->planSubscription()->with(['subscriber','subscriber.company'])->firstOrFail(),
                 'error' => $e->getMessage()
             ]);
         }
