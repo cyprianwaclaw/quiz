@@ -18,7 +18,7 @@ class PayoutController extends Controller
             'user' => $payout->user,
             'address' => $payout->user->address,
             'financial' => $payout->user->financial,
-            'statuses' => PayoutStatus::TYYPES_WITH_TEXT,
+            'statuses' => $payout->user->status,
         ]);
     }
 
