@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="text-xl font-semibold leading-tight text-gray-800">
             {{ __('Dashboard') }}
         </h2>
     </x-slot>
@@ -32,27 +32,27 @@
         </div>
     @endif
 
-    <div class="pb-4 pt-4">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="pt-4 pb-4">
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             @can('activate quiz')
                 <div
-                    class="text-white sm:rounded-lg bg-gradient-to-r bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-2 sm:p-6 overflow-hidden">
+                    class="p-2 overflow-hidden text-white bg-white border border-gray-200 sm:rounded-lg bg-gradient-to-r dark:bg-gray-900 dark:border-gray-700 sm:p-6">
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                        <div class="block text-xl font-bold text-center pb-3">Wypłata dla: {{$payout->user->name}} {{$payout->user->surname}}</div>
-                        <div class="block text-xl font-bold pb-3">
+                        <div class="block pb-3 text-xl font-bold text-center">Wypłata dla: {{$payout->user->name}} {{$payout->user->surname}}</div>
+                        <div class="block pb-3 text-xl font-bold">
                             <a href="{{route('dashboard')}}"
                                class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800">Wstecz</a>
                         </div>
-                        <div class="block text-xl font-bold pb-3">
+                        <div class="block pb-3 text-xl font-bold">
                             <form action="{{route('payout.setStatus', $payout->id)}}" method="post">
                                 @csrf
                                 <label for="status" class="block mb-1 text-sm font-medium text-gray-900 dark:text-gray-400">Status</label>
-                                <select id="status" name="status" class="mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                {{-- <select id="status" name="status" class="mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                     @foreach($statuses as $key=>$status)
                                     <option value="{{$key}}" @if($key == $payout->status) selected @endif >{{$status}}</option>
                                     @endforeach
                                 </select>
-                                <button class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800" type="submit">Akceptuj</button>
+                                <button class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800" type="submit">Akceptuj</button> --}}
                             </form>
                         </div>
                     </div>
