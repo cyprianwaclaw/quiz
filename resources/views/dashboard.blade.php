@@ -60,9 +60,9 @@
                         {{-- <div class="inline-block w-52">
                             Twój link zapraszający:
                         </div> --}}
-                        <div class="inline-block font-bold">
+                        {{-- <div class="inline-block font-bold">
                             <code>{{route('register')}}?invitation={{auth()->user()->invite->token}}</code>
-                        </div>
+                        </div> --}}
                     </div>
                     <div class="block">
                         <div class="inline-block w-52">Zaproszony przez:</div>
