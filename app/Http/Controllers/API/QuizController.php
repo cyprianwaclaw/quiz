@@ -176,8 +176,15 @@ class QuizController extends APIController
         }
 
         // Filtrowanie według aktywności
+        // if (!empty($active)) {
+        //     $query->whereIn('is_active', $active);
+        // }
+
         if (!empty($active)) {
             $query->whereIn('is_active', $active);
+        } else {
+            // Domyślnie tylko aktywne
+            $query->where('is_active', 1);
         }
 
         // Filtrowanie według czasu
