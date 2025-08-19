@@ -134,8 +134,8 @@ class UserSettingsController extends APIController
             $user->company->address()->updateOrCreate([], $address_request);
         }
 
-        if ($request->safe(['bank_name'])) {
-            $financial_request = $request->safe()->only(['bank_name', 'iban', 'swift']);
+        if ($request->safe(['iban'])) {
+            $financial_request = $request->safe()->only(['iban']);
             $user->financial()->updateOrCreate([], $financial_request);
         }
         return $this->sendResponse(new UserSettingsResource($user));
