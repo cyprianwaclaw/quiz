@@ -191,22 +191,22 @@ class PaymentController extends APIController
 
     // ...usunięto nieprawidłowe komentarze i zakomentowane duplikaty...
     //     }
-    // public function index(Request $request)
-    // {
-    //     $user = auth()->user();
-    //     $perPage = 15;
-    //     $page = $request->input('page', 1);
-    //     $payments = $user->payments()->with(['planSubscription.plan'])->orderBy('created_at', 'desc')->paginate($perPage, ['status'], 'page', $page);
+    public function index(Request $request)
+    {
+        $user = auth()->user();
+        $perPage = 15;
+        $page = $request->input('page', 1);
+        $payments = $user->payments()->with(['planSubscription.plan'])->orderBy('created_at', 'desc')->paginate($perPage, ['status'], 'page', $page);
 
-    //     return response([
-    //         'success' => true,
-    //         // 'data' => PaymentResource::collection($payments),
-    //         'data'=>$payments,
-    //         'message' => 'Objects fetched',
-    //     ], 200, [
-    //         'X-Total-Count' => $payments->total(),
-    //     ]);
-    // }
+        return response([
+            'success' => true,
+            // 'data' => PaymentResource::collection($payments),
+            'data'=>$payments,
+            'message' => 'Objects fetched',
+        ], 200, [
+            'X-Total-Count' => $payments->total(),
+        ]);
+    }
 
 
     // public function indexTest(Request $request)
