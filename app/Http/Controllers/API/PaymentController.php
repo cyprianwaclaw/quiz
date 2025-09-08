@@ -64,56 +64,56 @@ class PaymentController extends APIController
         $this->transfers24 = $transfers24;
     }
 
-    // public function status(Request $request)
-    // {
-    //     $response = $this->transfers24->receive($request);
-    //     $payment = Payment::where('session_id', $response->getSessionId())->firstOrFail();
-    //     Invoice::generate($payment);
+    public function status(Request $request)
+    {
+        $response = $this->transfers24->receive($request);
+        $payment = Payment::where('session_id', $response->getSessionId())->firstOrFail();
+        Invoice::generate($payment);
 
-    //     // if ($response->isSuccess()) {
-    //     $payment->status = PaymentStatus::SUCCESS;
-    //     $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
-    //     $subscription->renew();
-    //     Invoice::generate($payment);
-    //     event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
-    //     // } else {
-    //     //     $payment->status = PaymentStatus::FAIL;
-    //     //     $payment->error_code = $response->getErrorCode();
-    //     //     $payment->error_description = json_encode($response->getErrorDescription());
-    //     // }
-    //     $payment->save();
-    // }
+        // if ($response->isSuccess()) {
+        $payment->status = PaymentStatus::SUCCESS;
+        $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
+        $subscription->renew();
+        Invoice::generate($payment);
+        event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
+        // } else {
+        //     $payment->status = PaymentStatus::FAIL;
+        //     $payment->error_code = $response->getErrorCode();
+        //     $payment->error_description = json_encode($response->getErrorDescription());
+        // }
+        $payment->save();
+    }
 
-    // public function status(Request $request)
-    // {
-    //     \Log::info('Webhook received', $request->all());
+    public function statusWebhook(Request $request)
+    {
+        Log::info('Webhook received', $request->all());
 
-    //     $response = $this->transfers24->receive($request);
-    //     \Log::info('Response from Transfers24', [
-    //         'session_id' => $response->getSessionId(),
-    //         'status' => $response->isSuccess()
-    //     ]);
+        $response = $this->transfers24->receive($request);
+        Log::info('Response from Transfers24', [
+            'session_id' => $response->getSessionId(),
+            'status' => $response->isSuccess()
+        ]);
 
-    //     $payment = Payment::where('session_id', $response->getSessionId())->first();
+        $payment = Payment::where('session_id', $response->getSessionId())->first();
 
-    //     if (!$payment) {
-    //         \Log::error('Payment not found for session_id', ['session_id' => $response->getSessionId()]);
-    //         return response()->json(['error' => 'Payment not found'], 404);
-    //     }
+        if (!$payment) {
+            Log::error('Payment not found for session_id', ['session_id' => $response->getSessionId()]);
+            return response()->json(['error' => 'Payment not found'], 404);
+        }
 
-    //     Invoice::generate($payment);
+        Invoice::generate($payment);
 
-    //     $payment->status = PaymentStatus::SUCCESS;
-    //     $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
-    //     $subscription->renew();
-    //     Invoice::generate($payment);
-    //     event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
+        $payment->status = PaymentStatus::SUCCESS;
+        $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
+        $subscription->renew();
+        Invoice::generate($payment);
+        event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
 
-    //     $payment->save();
-    //     \Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
+        $payment->save();
+        Log::info('Payment status updated to SUCCESS', ['payment_id' => $payment->id]);
 
-    //     return response()->json(['message' => 'Payment status updated']);
-    // }
+        return response()->json(['message' => 'Payment status updated']);
+    }
 
 
 
@@ -223,6 +223,7 @@ class PaymentController extends APIController
         $user = $payment->user;
         $plan = Plan::find(3);
 
+            use Illuminate\Support\Facades\Log;
         if (!$plan) {
             return response()->json(['error' => 'Plan not found'], 500);
         }
@@ -316,7 +317,7 @@ class PaymentController extends APIController
 
     //     try {
     //         \Log::info('Generating invoice before status change');
-    //         Invoice::generate($payment);
+    // public function status(Request $request)
     //         \Log::info('Invoice generated successfully');
     //     } catch (\Exception $e) {
     //         \Log::error('Error generating invoice', ['message' => $e->getMessage(), 'payment_id' => $payment->id]);
