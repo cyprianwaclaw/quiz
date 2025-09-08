@@ -66,22 +66,35 @@ class PaymentController extends APIController
 
     public function status(Request $request)
     {
-        $response = $this->transfers24->receive($request);
-        $payment = Payment::where('session_id', $response->getSessionId())->firstOrFail();
-        Invoice::generate($payment);
+        try {
+            $response = $this->transfers24->receive($request);
+            \Log::info('PaymentController: Transfers24 response', ['response' => $response]);
+            $payment = Payment::where('session_id', $response->getSessionId())->firstOrFail();
+        } catch (\Exception $e) {
+            \Log::error('PaymentController: Transfers24 receive error', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Błąd płatności: ' . $e->getMessage()], 500);
+        }
 
-        // if ($response->isSuccess()) {
-        $payment->status = PaymentStatus::SUCCESS;
-        $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
-        $subscription->renew();
-        Invoice::generate($payment);
-        event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
-        // } else {
-        //     $payment->status = PaymentStatus::FAIL;
-        //     $payment->error_code = $response->getErrorCode();
-        //     $payment->error_description = json_encode($response->getErrorDescription());
-        // }
-        $payment->save();
+        try {
+            Invoice::generate($payment);
+            \Log::info('PaymentController: Faktura wygenerowana', ['payment_id' => $payment->id]);
+        } catch (\Exception $e) {
+            \Log::error('PaymentController: Błąd generowania faktury', ['error' => $e->getMessage(), 'payment_id' => $payment->id]);
+        }
+
+        try {
+            $payment->status = PaymentStatus::SUCCESS;
+            $subscription = PlanSubscription::findOrFail($payment->plan_subscription_id);
+            $subscription->renew();
+            \Log::info('PaymentController: Subskrypcja odnowiona', ['subscription_id' => $subscription->id]);
+            Invoice::generate($payment);
+            event(new Subscribed(User::findOrFail($subscription->subscriber_id), $subscription->plan));
+            $payment->save();
+            \Log::info('PaymentController: Payment zapisany jako SUCCESS', ['payment_id' => $payment->id]);
+        } catch (\Exception $e) {
+            \Log::error('PaymentController: Błąd zmiany pakietu/subskrypcji', ['error' => $e->getMessage(), 'payment_id' => $payment->id]);
+            return response()->json(['error' => 'Błąd subskrypcji: ' . $e->getMessage()], 500);
+        }
     }
 
     public function statusWebhook(Request $request)
