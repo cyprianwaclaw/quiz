@@ -65,6 +65,7 @@ class PaymentController extends APIController
     }
 
     public function status(Request $request)
+    {
         try {
             $response = $this->transfers24->receive($request);
             Log::info('PaymentController: Transfers24 response', ['response' => $response]);
@@ -132,7 +133,7 @@ class PaymentController extends APIController
             return response()->json(['error' => 'Błąd statusu płatności: ' . $e->getMessage()], 500);
         }
     }
-     */
+
 
     // public function status(Request $request)
     // {
@@ -188,35 +189,7 @@ class PaymentController extends APIController
     }
 
 
-    /**
-     * Get list of payment objects
-     *
-     * Also return header response `X-Total-Count` containing the number of fetched objects.
-     *
-     * @group Payments
-     * @responseFile status=200 scenario="Invoice fetched" storage/api-docs/responses/payments/index.200.json
-     * @responseFile status=401 scenario="Unauthenticated" storage/api-docs/responses/401.json
-     */
-    //     public function index(Request $request)
-    //     {
-    // $user= auth()->user();
-    // $perPage = 15;
-    // $page = $request->input('page', 1);
-    // $payments = $user->payments()->with(['planSubscription.plan'])->orderBy('created_at', 'desc')->paginate($perPage, ['*'], 'page', $page);;
-    //         // $query = $user->payouts()->orderBy('created_at', 'desc')->paginate($perPage, ['*'], 'page', $page);
-    //         // $collection = auth()->user()->payments()->with(['planSubscription.plan'])->get();
-
-    //         // $collection = auth()->user()->payments()->successful()->with(['planSubscription.plan'])->get();
-    //         return response([
-    //             'success' => true,
-    //             'data' => PaymentResource::collection( $payments),
-    //             'message' => 'Objects fetched',
-    //             // 'count' => $collection->count()
-    //         ],
-    //             200, [
-    //                 'X-Total-Count' => $payments ->count()
-    //             ]
-    //         );
+    // ...usunięto nieprawidłowe komentarze i zakomentowane duplikaty...
     //     }
     // public function index(Request $request)
     // {
@@ -286,115 +259,4 @@ class PaymentController extends APIController
     //     ], 200, [
     //         'X-Total-Count' => $payments->total(),
     //     ]);
-    // }
-
-    public function index(Request $request)
-    {
-        $user = auth()->user();
-        $perPage = 4;
-        $page = $request->input('page', 1);
-
-
-        $payments = Payment::where("user_id", $user->id)
-        ->orderByDesc('created_at')
-        ->paginate($perPage, ['*'], 'page', $page);
-
-        // Mapujemy dane do żądanej struktury
-        $mapped = $payments->getCollection()->map(function ($payment) {
-            return [
-                'payment_id' => $payment->id,
-                'status' => $payment->status,
-                'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
-                'error_code' => $payment->error_code,
-                'error_description' => $payment->error_description,
-                'ifirma_invoice_id' => $payment->ifirma_invoice_id,
-                'date' => optional($payment->created_at)->format('d.m.Y'),
-                'price' => 40, // stała wartość — zmień jeśli potrzebujesz dynamicznie
-            ];
-
-        });
-        // Pobranie płatności
-        // $payments = Payment::where("subscriber_id", $user->id)
-        // $payments = Payment::where("user_id", $user->id)->paginate($perPage, ['*'], 'page', $page);
-            // ->select(
-            //     'payments.id as payment_id',
-            //     'payments.status',
-            //     'payments.error_code',
-            //     'payments.error_description',
-            //     'payments.session_id',
-            //     // 'payments.plan_subscription_id',
-            //     'payments.ifirma_invoice_id',
-            //     'payments.created_at',
-            //     'payments.updated_at'
-            // )
-            // ->with(['planSubscription' => function ($query) {
-            //     $query->select('id as plan_subscription_id', 'subscriber_id as laravel_through_key');
-            // }])
-            // ->whereHas('planSubscription', function ($query) use ($user) {
-            //     $query->where('subscriber_id', $user->id)->whereNull('deleted_at');
-            // })
-            // ->orderBy('payments.created_at', 'asc')
-            // ->paginate($perPage, ['*'], 'page', $page);
-
-        // // Konwersja kolekcji na zmodyfikowane dane przed przypisaniem do paginacji
-        // $modifiedPayments = $payments->getCollection()->map(function ($payment) {
-        //     return [
-        //         'payment_id' => $payment->payment_id,
-        //         'status' => $payment->status,
-        //         'status_text' => PayoutStatus::TYPES_WITH_TEXT_PAYMENTS[$payment->status] ?? 'Nieznany status',
-        //         'error_code' => $payment->error_code,
-        //         'error_description' => $payment->error_description,
-        //         // 'session_id' => $payment->session_id,
-        //         // 'plan_subscription_id' => $payment->plan_subscription_id,
-        //         'ifirma_invoice_id' => $payment->ifirma_invoice_id,
-        //         'date' => optional($payment->created_at)->format('d.m.Y'),
-        //         // 'updated_at' => optional($payment->updated_at)->format('d.m.Y'),
-        //         'price' => 40,
-        //     ];
-        // });
-
-        // Zamiana zmodyfikowanej kolekcji w paginatorze
-        $payments->setCollection($mapped);
-
-        return response()->json([
-            // 'success' => true,
-            'data' => $payments,
-            'pagination' => [
-                'total' => $payments->total(),
-                'per_page' => $payments->perPage(),
-                'current_page' => $payments->currentPage(),
-                'last_page' => $payments->lastPage()
-            ],
-            // 'message' => 'Objects fetched',
-            ]);
-    }
-
-    // public function index(Request $request)
-    // {
-    //     $user = auth()->user();
-    //     $perPage = 15;
-    //     $page = $request->input('page', 1);
-
-    //     $payments = $user->payments()
-    //     ->select('payments.id as payment_id', 'payments.status', 'payments.error_code', 'payments.error_description', 'payments.session_id', 'payments.plan_subscription_id', 'payments.ifirma_invoice_id', 'payments.created_at', 'payments.updated_at')
-    //     ->with(['planSubscription' => function ($query) {
-    //         $query->select('plan_subscriptions.id as plan_subscription_id', 'plan_subscriptions.subscriber_id as laravel_through_key');
-    //     }])
-    //         ->join('plan_subscriptions as ps1', 'ps1.id', '=', 'payments.plan_subscription_id')
-    //         ->join('plan_subscriptions as ps2', 'ps2.id', '=', 'payments.plan_subscription_id')
-    //         ->where('ps1.subscriber_id', $user->id)
-    //         ->whereNull('ps1.deleted_at')
-    //         ->orderBy('payments.created_at', 'desc')
-    //         ->paginate($perPage, ['*'], 'page', $page);
-
-
-    //     return response([
-    //         'success' => true,
-    //         'data' => $payments,
-    //         'message' => 'Objects fetched',
-    //     ], 200, [
-    //         'X-Total-Count' => $payments->total(),
-    //     ]);
-    // }
-
-}
+    //
